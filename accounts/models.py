@@ -23,6 +23,9 @@ class UserProfile(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='unassigned')
     is_verified_employer = models.BooleanField(default=False)
     verified_by_staff = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_employers')
+    
+    # Ee field add cheyyuka:
+    is_verified_candidate = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} - {self.role}"

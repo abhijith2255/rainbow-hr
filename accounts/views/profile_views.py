@@ -78,31 +78,27 @@ def get_candidate_dashboard(request):
 def get_employer_dashboard(request):
     try:
         employer, created = EmployerProfile.objects.get_or_create(user=request.user)
-
-        # ലോഗോ ഉണ്ടോ എന്ന് സുരക്ഷിതമായി ചെക്ക് ചെയ്യുന്നു
+        
         logo_url = None
         if getattr(employer, 'company_logo', None) and hasattr(employer.company_logo, 'url'):
             logo_url = request.build_absolute_uri(employer.company_logo.url)
 
-        # getattr ഉപയോഗിച്ച് ഡാറ്റ എടുക്കുന്നു (ഫീൽഡ് ഇല്ലെങ്കിലും കോഡ് ക്രാഷ് ആകില്ല!)
         data = {
-            "companyName": getattr(employer, 'company_name', getattr(employer, 'companyName', "Your Company")),
-            "hrName": getattr(employer, 'hr_name', getattr(employer, 'hrName', "Not added")), # hr_name എന്ന് മാറ്റി
-            "industry": getattr(employer, 'industry', getattr(employer, 'industry_sector', "Not specified")),
-            "location": getattr(employer, 'location', getattr(employer, 'companyLocation', "Add Location")),
+            "companyName": employer.company_name or request.user.username,
+            "hrName": employer.hr_name or "Not added",
+            "industry": employer.industry or "Not specified",
+            "location": employer.company_location or "Add Location", # <-- company_location aakki maatti
             "companyLogo": logo_url,
             "email": request.user.email,
-            "companyWebsite": getattr(employer, 'company_website', getattr(employer, 'website', '')),
-            "companyDescription": getattr(employer, 'company_description', getattr(employer, 'description', '')),
-            
-            "active_jobs": 0, 
+            "companyWebsite": employer.company_website or '',
+            "companyDescription": employer.company_description or '',
+            "active_jobs": 0,
             "total_applicants": 0,
             "interviews_scheduled": 0
         }
         return Response(data, status=status.HTTP_200_OK)
-
     except Exception as e:
-        print("Employer Dashboard Error:", str(e)) 
+        print("Employer Dashboard Error:", str(e))
         return Response({"error": "Failed to load dashboard", "details": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
 

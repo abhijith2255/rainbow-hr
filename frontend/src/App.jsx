@@ -3,9 +3,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Navbar from './components/Navbar';
 import Home from './pages/home';
 import Footer from './components/Home/Footer';
+import AllCategories from './components/Home/AllCategories';
+import CategoryJobs from './components/Home/CategoryJobs';
 
 // --- Dashboard Imports ---
 import AdminDashboard from './components/AdminDashboard/AdminDashboard'; 
+import AdminJobApprovals from './components/AdminDashboard/AdminJobApprovals'; // പുതിയ പേജ് 1
+import AdminStaffs from './components/AdminDashboard/AdminStaffs';       
+import StaffJobApprovals from './components/StaffDashboard/StaffJobApprovals';  
+import ManageCategories from './components/ManageCategories';   // പുതിയ പേജ് 2
+
 import StaffDashboard from './components/StaffDashboard/StaffDashboard';
 import CandidateDashboard from './components/CandidateDashboard/CandidateDashboard'; 
 import EmployerDashboard from './components/EmployerDashboard/EmployerDashboard'; 
@@ -47,20 +54,35 @@ const EmployerRoute = ({ children }) => {
 // --- 5. Main Routes & Navbar Logic ---
 const AppRoutes = () => {
   const location = useLocation();
-  // ഡാഷ്ബോർഡുകളിൽ എത്തുമ്പോൾ മെയിൻ Navbar ഹൈഡ് ചെയ്യാൻ
-  const hideNavbar = location.pathname.includes('dashboard');
-
+  
+  // Dashboard, Admin sub-pages, profile edit പേജുകളിൽ മെയിൻ Navbar ഹൈഡ് ചെയ്യുന്നു
+const hideNavbar = 
+    location.pathname.includes('dashboard') || 
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/staff') ||
+    location.pathname.startsWith('/employer') ||
+    location.pathname.includes('profile-edit');
   return (
     <>
       {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         
-        {/* Protected Dashboards */}
+        {/* --- Protected Admin Routes --- */}
         <Route 
           path="/admin-dashboard" 
           element={ <AdminRoute><AdminDashboard /></AdminRoute> } 
         />
+        <Route 
+          path="/admin/approvals" 
+          element={ <AdminRoute><AdminJobApprovals /></AdminRoute> } 
+        />
+        <Route 
+          path="/admin/staffs" 
+          element={ <AdminRoute><AdminStaffs /></AdminRoute> } 
+        />
+
+        {/* --- Other Dashboards --- */}
         <Route 
           path="/staff-dashboard" 
           element={ <StaffRoute><StaffDashboard /></StaffRoute> } 
@@ -73,13 +95,23 @@ const AppRoutes = () => {
           path="/employer-dashboard" 
           element={ <EmployerRoute><EmployerDashboard /></EmployerRoute> } 
         />
-        <Route path="/candidate-profile-edit"
-               element={ <CandidateRoute><CandidateProfileEdit /></CandidateRoute> } 
+        <Route 
+          path="/candidate-profile-edit"
+          element={ <CandidateRoute><CandidateProfileEdit /></CandidateRoute> } 
         />
-        <Route path="/employer-profile-edit" element={ <EmployerRoute><EmployerProfileEdit /></EmployerRoute> } />
-      
+        <Route 
+          path="/employer-profile-edit" 
+          element={ <EmployerRoute><EmployerProfileEdit /></EmployerRoute> } 
+        />
+        <Route path="/admin/categories" element={<AdminRoute><ManageCategories /></AdminRoute>} />
+        <Route path="/staff/categories" element={<StaffRoute><ManageCategories /></StaffRoute>} />
+        <Route 
+  path="/staff/approvals" 
+  element={ <StaffRoute><StaffJobApprovals /></StaffRoute> } 
+/>
+<Route path="/categories" element={<AllCategories />} />
+<Route path="/categories/:categoryId/jobs" element={<CategoryJobs />} />
       </Routes>
-      
     </>
   );
 };
@@ -89,7 +121,6 @@ function App() {
   const [isPreloading, setIsPreloading] = useState(true);
 
   useEffect(() => {
-    // വെബ്‌സൈറ്റ് ആദ്യമായി ഓപ്പൺ ചെയ്യുമ്പോഴോ റിഫ്രഷ് ചെയ്യുമ്പോഴോ മാത്രം പ്രീലോഡർ വരും
     const timer = setTimeout(() => {
       setIsPreloading(false);
     }, 1500);

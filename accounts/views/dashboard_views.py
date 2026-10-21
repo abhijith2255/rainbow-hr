@@ -72,3 +72,24 @@ def admin_create_staff_api(request):
     user = User.objects.create_user(username=username, email=email, password=password)
     UserProfile.objects.create(user=user, role='staff')
     return Response({"message": "Staff created!"}, status=status.HTTP_201_CREATED)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def staff_dashboard_data(request):
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        # സ്റ്റാഫിന് മാത്രമാണ് ഈ ഡാറ്റ കൊടുക്കുന്നത്
+        if profile.role not in ['staff', 'admin']:
+            return Response({"error": "Permission denied"}, status=403)
+            
+        # എത്ര ജോബുകൾ അപ്രൂവ് ചെയ്യാൻ ബാക്കിയുണ്ടെന്ന് എണ്ണുന്നു
+        pending_jobs_count = Job.objects.filter(approval_status='Pending').count()
+        
+        data = {
+            "welcome_message": f"Welcome back, {request.user.username}!",
+            "pending_tasks": pending_jobs_count
+        }
+        return Response(data)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+

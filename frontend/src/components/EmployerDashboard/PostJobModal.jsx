@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
@@ -7,6 +7,7 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
     companyName: '',
     location: '',
     jobType: 'Full-time',
+    category: '', // പുതുതായി ചേർത്തത്
     genderPreference: 'Any',
     salaryType: 'Fixed Range',
     salaryRange: '',
@@ -28,8 +29,29 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
     additionalBenefits: ''
   });
 
+  const [categories, setCategories] = useState([]); // കാറ്റഗറികൾ സ്റ്റോർ ചെയ്യാൻ
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // മോഡൽ ഓപ്പൺ ആകുമ്പോൾ കാറ്റഗറികൾ എടുക്കാൻ
+  useEffect(() => {
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get('http://127.0.0.1:8000/api/jobs/categories/');
+      setCategories(res.data);
+      // ഒന്നാമത്തെ കാറ്റഗറി ഡിഫോൾട്ടായി സെലക്ട് ചെയ്യാൻ
+      if (res.data.length > 0 && !formData.category) {
+        setFormData(prev => ({ ...prev, category: res.data[0].id }));
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -48,12 +70,12 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
 
     try {
       const token = localStorage.getItem('authToken');
-      // Django backend field names-ilekk data map cheyyunnu
       const payload = {
         title: formData.title,
         company_name: formData.companyName,
         location: formData.location,
         job_type: formData.jobType,
+        category: formData.category, // കാറ്റഗറി കൂടി അയക്കുന്നു
         gender_preference: formData.genderPreference,
         salary_type: formData.salaryType,
         salary_range: formData.salaryRange,
@@ -80,16 +102,12 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
       });
 
       setLoading(false);
-      onJobPosted(); // Job list refresh cheyyan
-      onClose();     // Popup close cheyyan
+      onJobPosted(); 
+      onClose();     
     } catch (err) {
       setLoading(false);
-      console.log("Backend Error:", err.response?.data);
-      
-      // ബാക്കെൻഡിൽ നിന്നുള്ള യഥാർത്ഥ എറർ മെസ്സേജ് സ്ക്രീനിൽ തന്നെ കാണിക്കാൻ
       let errorMessage = 'Failed to post job. Please check all fields.';
       if (err.response && err.response.data) {
-          // ജാംഗോ അയക്കുന്ന എറർ സ്ക്രീനിൽ കാണിക്കുന്നു
           errorMessage = JSON.stringify(err.response.data); 
       }
       setError(errorMessage);
@@ -127,6 +145,16 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Category Dropdown (പുതുതായി ചേർത്തത്) */}
+            <div>
+              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Category</label>
+              <select name="category" value={formData.category} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none" required>
+                <option value="" disabled>Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Location</label>
               <input type="text" name="location" value={formData.location} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none" placeholder="e.g. Kochi, Remote" required />
@@ -141,46 +169,48 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
                 <option value="Contract">Contract</option>
               </select>
             </div>
+          </div>
+
+          {/* Salary & Incentives */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Gender Preference</label>
               <select name="genderPreference" value={formData.genderPreference} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none">
-                <option value="Any">Any / Both (Male/Female)</option>
+                <option value="Any">Any / Both</option>
                 <option value="Male">Male Only</option>
                 <option value="Female">Female Only</option>
               </select>
             </div>
-          </div>
-
-          {/* Salary & Incentives */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-            <div>
-              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Salary Range / Type</label>
-              <input type="text" name="salaryRange" value={formData.salaryRange} onChange={handleChange} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:border-emerald-500 outline-none" placeholder="e.g. ₹18,000 to ₹22,000 or Best in Industry" />
-            </div>
-            <div className="flex flex-col justify-center">
-              <label className="flex items-center gap-3 cursor-pointer mt-4">
-                <input type="checkbox" name="hasIncentives" checked={formData.hasIncentives} onChange={handleChange} className="w-5 h-5 accent-emerald-600 rounded" />
-                <span className="text-xs font-black text-slate-700 uppercase">Incentives Available?</span>
-              </label>
-              {formData.hasIncentives && (
-                <input type="text" name="incentiveDetails" value={formData.incentiveDetails} onChange={handleChange} className="mt-2 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none" placeholder="Incentive details (e.g. Monthly performance based)" />
-              )}
+            <div className="md:col-span-2 grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div>
+                <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Salary Range</label>
+                <input type="text" name="salaryRange" value={formData.salaryRange} onChange={handleChange} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:border-emerald-500 outline-none" placeholder="e.g. ₹18,000 to ₹22,000" />
+              </div>
+              <div className="flex flex-col justify-center">
+                <label className="flex items-center gap-3 cursor-pointer mt-4">
+                  <input type="checkbox" name="hasIncentives" checked={formData.hasIncentives} onChange={handleChange} className="w-5 h-5 accent-emerald-600 rounded" />
+                  <span className="text-xs font-black text-slate-700 uppercase">Incentives?</span>
+                </label>
+                {formData.hasIncentives && (
+                  <input type="text" name="incentiveDetails" value={formData.incentiveDetails} onChange={handleChange} className="mt-2 w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none" placeholder="Details..." />
+                )}
+              </div>
             </div>
           </div>
 
           {/* Experience, Age & Qualification */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Experience Required</label>
+              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Experience</label>
               <input type="text" name="experienceRequired" value={formData.experienceRequired} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none" placeholder="e.g. 1-3 Years" />
               <div className="flex items-center gap-3 mt-3">
                 <input type="checkbox" name="fresherAllowed" checked={formData.fresherAllowed} onChange={handleChange} className="w-5 h-5 accent-emerald-600 rounded" />
-                <span className="text-xs font-extrabold text-slate-700">Freshers Can Apply</span>
+                <span className="text-xs font-extrabold text-slate-700">Freshers OK</span>
               </div>
             </div>
             <div>
               <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Age Limit</label>
-              <input type="text" name="ageLimit" value={formData.ageLimit} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none" placeholder="e.g. 24 to 35 years" />
+              <input type="text" name="ageLimit" value={formData.ageLimit} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none" placeholder="e.g. 24 to 35" />
             </div>
             <div>
               <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Qualification</label>
@@ -188,9 +218,9 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
             </div>
           </div>
 
-          {/* Benefits & Allowances Checkboxes (Accommodation, Food, Insurance, PF, TA, DA) */}
+          {/* Benefits Checkboxes */}
           <div>
-            <label className="block text-xs font-extrabold text-slate-500 mb-3 uppercase">Perks & Allowances Available</label>
+            <label className="block text-xs font-extrabold text-slate-500 mb-3 uppercase">Perks & Allowances</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
               <label className="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox" name="accommodation" checked={formData.accommodation} onChange={handleChange} className="w-4 h-4 accent-emerald-600 rounded" />
@@ -210,11 +240,11 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
               </label>
               <label className="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox" name="travelAllowance" checked={formData.travelAllowance} onChange={handleChange} className="w-4 h-4 accent-emerald-600 rounded" />
-                <span className="text-xs font-bold text-slate-700">TA (Travel Allowance)</span>
+                <span className="text-xs font-bold text-slate-700">TA (Travel)</span>
               </label>
               <label className="flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox" name="dearnessAllowance" checked={formData.dearnessAllowance} onChange={handleChange} className="w-4 h-4 accent-emerald-600 rounded" />
-                <span className="text-xs font-bold text-slate-700">DA (Dearness Allowance)</span>
+                <span className="text-xs font-bold text-slate-700">DA (Dearness)</span>
               </label>
             </div>
           </div>
@@ -222,25 +252,19 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
           {/* Description & Requirements */}
           <div>
             <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Job Description / Roles</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} rows="3" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none resize-none" placeholder="Describe the job roles..." required></textarea>
+            <textarea name="description" value={formData.description} onChange={handleChange} rows="2" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none resize-none" placeholder="Describe the job roles..." required></textarea>
           </div>
 
           <div>
-            <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Requirements & Skills (e.g. English/Hindi, Basic Computer)</label>
+            <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Requirements & Skills</label>
             <textarea name="requirements" value={formData.requirements} onChange={handleChange} rows="2" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none resize-none" placeholder="Basic computer knowledge, languages known..." required></textarea>
           </div>
 
-          {/* Leave policy & Submit */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Leave Policy</label>
-              <input type="text" name="leavePolicy" value={formData.leavePolicy} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none" placeholder="e.g. Monthly 4 leaves" />
-            </div>
-            <div className="flex items-end">
-              <button type="submit" disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/30 tracking-wide">
-                {loading ? 'Posting Job...' : 'Publish Job Post'}
-              </button>
-            </div>
+          {/* Submit */}
+          <div className="flex justify-end pt-2">
+            <button type="submit" disabled={loading} className="px-8 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/30 tracking-wide">
+              {loading ? 'Posting...' : 'Publish Job Post'}
+            </button>
           </div>
 
         </form>

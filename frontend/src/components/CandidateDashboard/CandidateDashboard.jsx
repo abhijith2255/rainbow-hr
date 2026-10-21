@@ -5,34 +5,107 @@ import axios from 'axios';
 const CandidateDashboard = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        // ബാക്കെൻഡിലെ profile_api വിളിക്കുന്നു
-        const res = await axios.get('http://127.0.0.1:8000/api/accounts/candidate/dashboard-data/', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        setData(res.data);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        if (error.response?.status === 401) {
-          handleLogout();
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Modals state
+  const [viewingApp, setViewingApp] = useState(null);
+  const [editingApp, setEditingApp] = useState(null);
+  const [editFormData, setEditFormData] = useState({ full_name: '', phone: '', cover_letter: '', resume: null });
+  const [actionLoading, setActionLoading] = useState(false);
 
-    fetchDashboardData();
+  useEffect(() => {
+    fetchDashboardAndApplications();
   }, []);
+
+  const fetchDashboardAndApplications = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) return handleLogout();
+
+      const [dashRes, appsRes] = await Promise.all([
+        axios.get('http://127.0.0.1:8000/api/accounts/candidate/dashboard-data/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        axios.get('http://127.0.0.1:8000/api/jobs/my-applications/', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+      setData(dashRes.data);
+      setApplications(appsRes.data || []);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      if (error.response?.status === 401) {
+        handleLogout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userRole');
     navigate('/');
+  };
+
+  // Delete / Withdraw Application
+  const handleDeleteApplication = async (appId) => {
+    if (!window.confirm("Are you sure you want to withdraw this application?")) return;
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.delete(`http://127.0.0.1:8000/api/jobs/applications/${appId}/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      alert("Application withdrawn successfully!");
+      setApplications(applications.filter(app => app.id !== appId));
+      if (viewingApp?.id === appId) setViewingApp(null);
+    } catch (err) {
+      console.error("Failed to delete application", err);
+      alert("Failed to withdraw application. Please try again.");
+    }
+  };
+
+  // Open Edit Modal
+  const handleOpenEdit = (app) => {
+    setEditingApp(app);
+    setEditFormData({
+      full_name: app.full_name || '',
+      phone: app.phone || '',
+      cover_letter: app.cover_letter || '',
+      resume: null
+    });
+  };
+
+  // Submit Edit Application
+  const handleUpdateApplication = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const formData = new FormData();
+      formData.append('full_name', editFormData.full_name);
+      formData.append('phone', editFormData.phone);
+      formData.append('cover_letter', editFormData.cover_letter);
+      if (editFormData.resume) {
+        formData.append('resume', editFormData.resume);
+      }
+
+      const res = await axios.put(`http://127.0.0.1:8000/api/jobs/applications/${editingApp.id}/`, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      alert("Application updated successfully!");
+      setApplications(applications.map(app => app.id === editingApp.id ? res.data : app));
+      setEditingApp(null);
+    } catch (err) {
+      console.error("Error updating application:", err);
+      alert("Failed to update application details.");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   if (loading) {
@@ -43,7 +116,6 @@ const CandidateDashboard = () => {
     );
   }
 
-  // Profile Picture URL ശരിയാക്കാൻ
   const getProfilePicUrl = () => {
     if (!data?.profilePicture) return null;
     return data.profilePicture.startsWith('http') 
@@ -51,24 +123,15 @@ const CandidateDashboard = () => {
       : `http://127.0.0.1:8000${data.profilePicture}`;
   };
 
-  // Resume URL ശരിയാക്കാൻ
-  const getResumeUrl = () => {
-    if (!data?.resume) return null;
-    return data.resume.startsWith('http') 
-      ? data.resume 
-      : `http://127.0.0.1:8000${data.resume}`;
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 font-premium p-6 md:p-12">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto space-y-10">
         
         {/* Header section with User Data */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6 bg-white p-8 rounded-[2rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-8 rounded-[2rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -z-10 opacity-60 translate-x-1/2 -translate-y-1/2"></div>
           
           <div className="flex items-center gap-6 z-10 w-full md:w-auto">
-            {/* Profile Picture */}
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-3xl shadow-lg overflow-hidden border-4 border-white shrink-0">
               {getProfilePicUrl() ? (
                 <img src={getProfilePicUrl()} alt="Profile" className="w-full h-full object-cover" />
@@ -93,21 +156,17 @@ const CandidateDashboard = () => {
               onClick={() => navigate('/')} 
               className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
               Find Jobs
             </button>
-
             <button 
               onClick={() => navigate('/candidate-profile-edit')} 
-              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-emerald-50 hover:text-emerald-600 transition-all flex items-center justify-center gap-2 text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
               Edit Profile
             </button>
-
             <button 
               onClick={handleLogout} 
-              className="px-4 py-3 bg-white border border-slate-200 text-red-500 font-bold rounded-xl shadow-sm hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center"
+              className="px-4 py-3 bg-white border border-slate-200 text-red-500 font-bold rounded-xl shadow-sm hover:bg-red-50 transition-all flex items-center justify-center"
               title="Sign Out"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
@@ -115,132 +174,253 @@ const CandidateDashboard = () => {
           </div>
         </header>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
+            <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <h3 className="text-3xl font-black text-slate-900">{applications.length}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Applied Jobs</p>
+          </div>
           
-          {/* Left Column: Stats & Resume */}
-          <div className="space-y-8 lg:col-span-2">
-            
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-                <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                </div>
-                <h3 className="text-3xl font-black text-slate-900">0</h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Applied Jobs</p>
-              </div>
-              
-              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-                <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
-                </div>
-                <h3 className="text-3xl font-black text-slate-900">0</h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Saved Jobs</p>
-              </div>
-              
-              <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-                <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                </div>
-                <h3 className="text-3xl font-black text-slate-900">0</h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Interviews</p>
-              </div>
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
             </div>
+            <h3 className="text-3xl font-black text-slate-900">0</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Saved Jobs</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
+            <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+            <h3 className="text-3xl font-black text-slate-900">0</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Interviews</p>
+          </div>
+        </div>
 
-            {/* Resume Section */}
-            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-              <h3 className="text-xl font-black text-slate-900 mb-6">Resume & Portfolio</h3>
-              <div className="flex flex-col sm:flex-row gap-4">
-                {getResumeUrl() ? (
-                  <a href={getResumeUrl()} target="_blank" rel="noreferrer" className="flex-1 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 text-emerald-700 font-bold px-6 py-4 rounded-xl flex items-center gap-3 transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <div>
-                      <p className="text-sm">Download Resume</p>
-                      <p className="text-[10px] uppercase tracking-wider font-extrabold opacity-70">PDF Document</p>
-                    </div>
-                  </a>
-                ) : (
-                  <div className="flex-1 bg-slate-50 border border-slate-100 text-slate-400 font-bold px-6 py-4 rounded-xl flex items-center gap-3">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    <p className="text-sm">No Resume Uploaded</p>
-                  </div>
-                )}
-                
-                {data?.portfolioLink && (
-                  <a href={data.portfolioLink} target="_blank" rel="noreferrer" className="flex-1 bg-blue-50 border border-blue-100 hover:bg-blue-100 text-blue-700 font-bold px-6 py-4 rounded-xl flex items-center gap-3 transition-colors">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
-                    <div>
-                      <p className="text-sm">View Portfolio</p>
-                      <p className="text-[10px] uppercase tracking-wider font-extrabold opacity-70">External Link</p>
-                    </div>
-                  </a>
-                )}
-              </div>
+        {/* Applied Jobs Section */}
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900">My Applications</h2>
+              <p className="text-slate-500 text-sm font-medium mt-1">Track, manage or edit your submitted job applications.</p>
             </div>
+            <span className="px-3 py-1 bg-slate-100 text-slate-700 font-extrabold text-xs rounded-xl">
+              {applications.length} Submitted
+            </span>
           </div>
 
-          {/* Right Column: Personal Details */}
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm h-fit">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-black text-slate-900">Personal Details</h3>
-              <button onClick={() => navigate('/candidate-profile-edit')} className="text-emerald-500 hover:text-emerald-600 bg-emerald-50 p-2 rounded-full">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+          {applications.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <p className="text-slate-500 font-bold text-sm">You haven't applied for any jobs yet.</p>
+              <button onClick={() => navigate('/')} className="mt-4 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition-all">
+                Browse Jobs & Apply Now
               </button>
             </div>
-            
-            <div className="space-y-5">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 text-slate-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Email Address</p>
-                  <p className="text-sm font-bold text-slate-800 break-all">{data?.email}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 text-slate-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phone Number</p>
-                  <p className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    {data?.phoneNumber || 'Not provided'}
-                    {data?.isPhoneVerified && <span className="w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center" title="Verified"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg></span>}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 text-slate-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Experience & Education</p>
-                  <p className="text-sm font-bold text-slate-800">{data?.experienceYears ? `${data.experienceYears} Years Experience` : 'Fresher'}</p>
-                  <p className="text-xs font-semibold text-slate-500 mt-1">{data?.education || 'No education details added'}</p>
-                </div>
-              </div>
-
-              {data?.skills && (
-                <div className="pt-4 border-t border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Top Skills</p>
-                  <div className="flex flex-wrap gap-2">
-                    {data.skills.split(',').map((skill, index) => (
-                      <span key={index} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold">
-                        {skill.trim()}
+          ) : (
+            <div className="space-y-4">
+              {applications.map((app) => (
+                <div key={app.id} className="p-6 rounded-2xl border border-slate-100 bg-white hover:border-emerald-100 hover:shadow-md transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    {/* Status Badge ഉൾപ്പെടുത്തിയ ഭാഗം */}
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <span className="px-2.5 py-0.5 bg-slate-100 text-slate-700 font-black text-[10px] rounded-md uppercase">
+                        {app.job_type || 'Full-time'}
                       </span>
-                    ))}
+
+                      <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                        app.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
+                        app.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-amber-100 text-amber-800'
+                      }`}>
+                        {app.status === 'Approved' ? '✓ Verified & Forwarded' : (app.status || 'Pending Review')}
+                      </span>
+
+                      <span className="text-[11px] font-bold text-slate-400">
+                        Applied on {new Date(app.applied_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-black text-slate-900">{app.job_title}</h3>
+                    <p className="text-sm font-bold text-slate-500 mt-0.5">{app.company_name} • {app.location}</p>
+                    <p className="text-xs text-slate-400 mt-1 font-medium">Applicant: <span className="text-slate-700 font-bold">{app.full_name}</span> ({app.phone})</p>
                   </div>
+
+                  <div className="flex items-center gap-2 w-full md:w-auto">
+                    <button 
+                      onClick={() => setViewingApp(app)} 
+                      className="flex-1 md:flex-none px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
+                    >
+                      View Details
+                    </button>
+                    <button 
+                      onClick={() => handleOpenEdit(app)} 
+                      className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-all"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteApplication(app.id)} 
+                      className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl transition-all"
+                      title="Withdraw Application"
+                    >
+                      Withdraw
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 1. VIEW JOB & APPLICATION DETAILS MODAL */}
+      {viewingApp && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-slate-100">
+            <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-6">
+              <div>
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-black text-[10px] rounded-lg uppercase">{viewingApp.job_type}</span>
+                <h2 className="text-2xl font-black text-slate-900 mt-2">{viewingApp.job_title}</h2>
+                <p className="text-sm font-bold text-slate-500">{viewingApp.company_name} • {viewingApp.location}</p>
+              </div>
+              <button onClick={() => setViewingApp(null)} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200">✕</button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">Application Info</h4>
+                <div className="grid grid-cols-2 gap-3 text-xs font-bold text-slate-700">
+                  <p>Name: <span className="text-slate-900">{viewingApp.full_name}</span></p>
+                  <p>Email: <span className="text-slate-900">{viewingApp.email}</span></p>
+                  <p>Phone: <span className="text-slate-900">{viewingApp.phone}</span></p>
+                  <p>Status: <span className="text-slate-900">{viewingApp.status || 'Pending'}</span></p>
+                  <p>Applied Date: <span className="text-slate-900">{new Date(viewingApp.applied_at).toLocaleDateString()}</span></p>
+                </div>
+                {viewingApp.resume && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <a 
+                      href={viewingApp.resume.startsWith('http') ? viewingApp.resume : `http://127.0.0.1:8000${viewingApp.resume}`} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="inline-flex items-center gap-2 text-emerald-600 font-black text-xs hover:underline"
+                    >
+                      Download Submitted Resume
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {viewingApp.cover_letter && (
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">Your Cover Note</h4>
+                  <p className="text-sm text-slate-700 bg-slate-50 p-4 rounded-2xl whitespace-pre-line font-medium">{viewingApp.cover_letter}</p>
+                </div>
+              )}
+
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">Job Description</h4>
+                <p className="text-sm text-slate-700 whitespace-pre-line font-medium leading-relaxed">{viewingApp.description || 'No description provided.'}</p>
+              </div>
+
+              {viewingApp.requirements && (
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">Job Requirements</h4>
+                  <p className="text-sm text-slate-700 whitespace-pre-line font-medium leading-relaxed">{viewingApp.requirements}</p>
                 </div>
               )}
             </div>
-          </div>
 
+            <div className="flex gap-3 pt-6 border-t border-slate-100 mt-6">
+              <button onClick={() => setViewingApp(null)} className="flex-1 py-3 bg-slate-100 font-bold text-slate-700 rounded-xl text-xs">
+                Close
+              </button>
+              <button 
+                onClick={() => {
+                  const toDeleteId = viewingApp.id;
+                  handleDeleteApplication(toDeleteId);
+                }} 
+                className="py-3 px-6 bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-xl text-xs"
+              >
+                Withdraw Application
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* 2. EDIT APPLICATION MODAL */}
+      {editingApp && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl border border-slate-100">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
+              <div>
+                <h3 className="text-xl font-black text-slate-900">Edit Application</h3>
+                <p className="text-xs font-bold text-slate-400">{editingApp.job_title} • {editingApp.company_name}</p>
+              </div>
+              <button onClick={() => setEditingApp(null)} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200">✕</button>
+            </div>
+
+            <form onSubmit={handleUpdateApplication} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  value={editFormData.full_name} 
+                  onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none focus:border-emerald-500" 
+                  required 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number</label>
+                <input 
+                  type="text" 
+                  value={editFormData.phone} 
+                  onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none focus:border-emerald-500" 
+                  required 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Update Resume (Optional)</label>
+                <input 
+                  type="file" 
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => setEditFormData({ ...editFormData, resume: e.target.files[0] })} 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-600 file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700 file:font-bold hover:file:bg-emerald-100" 
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Leave empty if you want to keep the current resume.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Cover Note</label>
+                <textarea 
+                  rows="3" 
+                  value={editFormData.cover_letter} 
+                  onChange={(e) => setEditFormData({ ...editFormData, cover_letter: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 resize-none" 
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setEditingApp(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs">
+                  Cancel
+                </button>
+                <button type="submit" disabled={actionLoading} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md shadow-emerald-500/20">
+                  {actionLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

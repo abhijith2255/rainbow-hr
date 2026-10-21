@@ -52,7 +52,9 @@ const AdminDashboard = () => {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path></svg>
             Dashboard Overview
           </Link>
-          
+          <Link to={localStorage.getItem('userRole') === 'staff' ? '/staff/categories' : '/admin/categories'} className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold">
+  Manage Categories
+</Link>
           {/* Route to separate Approvals page */}
           <Link to="/admin/approvals" className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-bold transition-all text-slate-400 hover:bg-white/5 hover:text-white">
             <div className="flex items-center gap-3">

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // 1. useLocation add cheythu
 import axios from 'axios';
 import Login from '../pages/login'; 
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // 2. Location hook initialize cheythu
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   
@@ -15,17 +16,16 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [userName, setUserName] = useState('');
-  const [profilePic, setProfilePic] = useState(null); // പ്രൊഫൈൽ ഫോട്ടോ കാണിക്കാൻ
+  const [profilePic, setProfilePic] = useState(null);
 
-  // സ്ക്രോൾ ചെയ്യുമ്പോൾ ബാക്ക്ഗ്രൗണ്ട് മാറ്റാൻ
+  // Scroll effect
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // ലോഗിൻ സ്റ്റാറ്റസും യൂസർ വിവരങ്ങളും ചെക്ക് ചെയ്യാൻ
-  useEffect(() => {
+ useEffect(() => {
     const checkLoginStatus = async () => {
       const token = localStorage.getItem('authToken');
       const role = localStorage.getItem('userRole');
@@ -35,28 +35,52 @@ const Navbar = () => {
         setUserRole(role);
         
         try {
-          // പുതിയ profile API വിളിക്കുന്നു
-          const res = await axios.get('http://127.0.0.1:8000/api/profile/', { 
+          // 1. accounts path correct aayi kodukkuka
+          const res = await axios.get('http://127.0.0.1:8000/api/accounts/profile/', { 
             headers: { 'Authorization': `Bearer ${token}` } 
           });
           
-          setUserName(res.data.fullName || res.data.companyName || res.data.username || 'User');
+          // 2. snake_case & camelCase randum support cheyyunna reethi
+          const name = res.data.full_name || res.data.fullName || res.data.company_name || res.data.companyName || res.data.username || 'User';
+          setUserName(name);
           
-          // ഫോട്ടോ ഉണ്ടെങ്കിൽ അത് സെറ്റ് ചെയ്യുന്നു
-          const pic = res.data.profilePicture || res.data.companyLogo;
+          const pic = res.data.profile_picture || res.data.profilePicture || res.data.company_logo || res.data.companyLogo;
           if (pic) {
             setProfilePic(pic.startsWith('http') ? pic : `http://127.0.0.1:8000${pic}`);
           }
           
         } catch (err) {
           console.error("Failed to fetch user data", err);
-          if (err.response?.status === 401) handleLogout();
+          // Backend URL /api/accounts/user-profile/ aayirikkaan saadhyathayund:
+          if (err.response?.status === 404) {
+            tryFallbackProfileUrl(token);
+          }
         }
+      } else {
+        setIsLoggedIn(false);
+        setUserRole(null);
+      }
+    };
+
+    // Fallback: Oruvela /api/accounts/user-profile/ aaanengil athil ninnu edukkunnu
+    const tryFallbackProfileUrl = async (token) => {
+      try {
+        const res = await axios.get('http://127.0.0.1:8000/api/accounts/user-profile/', { 
+          headers: { 'Authorization': `Bearer ${token}` } 
+        });
+        const name = res.data.full_name || res.data.fullName || res.data.company_name || res.data.companyName || res.data.username || 'User';
+        setUserName(name);
+        const pic = res.data.profile_picture || res.data.profilePicture || res.data.company_logo || res.data.companyLogo;
+        if (pic) {
+          setProfilePic(pic.startsWith('http') ? pic : `http://127.0.0.1:8000${pic}`);
+        }
+      } catch (e) {
+        console.error("Fallback profile fetch failed too", e);
       }
     };
 
     checkLoginStatus();
-  }, [isLoginModalOpen]); // ലോഗിൻ മോഡൽ ക്ലോസ് ആകുമ്പോഴും ഇത് റൺ ആകും
+  }, [isLoginModalOpen, location]); // <-- 3. [location] koodi dependency-il add cheythu
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -78,7 +102,7 @@ const Navbar = () => {
 
   const getProfileEditLink = () => {
     if (userRole === 'employer') return '/employer-profile-edit';
-    return '/candidate-profile-edit'; // ഡീഫോൾട്ട് ആയി കാൻഡിഡേറ്റ് പ്രൊഫൈലിലേക്ക്
+    return '/candidate-profile-edit';
   };
 
   return (
@@ -113,7 +137,6 @@ const Navbar = () => {
               </>
             ) : (
               <div className="relative">
-                {/* User Avatar Button */}
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-3 bg-white/10 border border-white/10 hover:bg-white/20 px-4 py-2 rounded-full transition-all cursor-pointer"
@@ -132,17 +155,14 @@ const Navbar = () => {
                   <svg className={`w-4 h-4 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
 
-                {/* Dropdown Menu (ഇവിടെയാണ് My Profile വരുന്നത്) */}
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-slate-100 overflow-hidden animate-fade-in py-2">
-                    
                     <div className="px-5 py-3 border-b border-slate-50 bg-slate-50/50">
                       <p className="text-slate-900 font-bold text-sm truncate">{userName}</p>
                       <p className="text-slate-500 text-xs font-semibold capitalize">{userRole} Account</p>
                     </div>
                     
                     <div className="p-2 space-y-1">
-                      {/* My Profile Link */}
                       <Link 
                         to={getProfileEditLink()}
                         onClick={() => setIsDropdownOpen(false)}
@@ -152,7 +172,6 @@ const Navbar = () => {
                         My Profile
                       </Link>
 
-                      {/* Dashboard Link */}
                       <Link 
                         to={getDashboardLink()}
                         onClick={() => setIsDropdownOpen(false)}
@@ -178,7 +197,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Toggle Button */}
           <button onClick={() => setIsOpen(!isOpen)} className="lg:hidden focus:outline-none p-2 rounded-xl text-white bg-white/10">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />}
@@ -186,7 +204,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isOpen && (
           <div className="lg:hidden mt-3 bg-slate-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col space-y-4 text-center">
             <Link to="/" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">Find Jobs</Link>
@@ -209,11 +226,9 @@ const Navbar = () => {
                      <p className="text-emerald-400 text-[10px] font-black uppercase tracking-wider mt-1">{userRole}</p>
                    </div>
                 </div>
-                {/* Mobile Menu: My Profile */}
                 <Link to={getProfileEditLink()} onClick={() => setIsOpen(false)} className="bg-white/5 text-white py-3 rounded-xl font-bold border border-white/10 block">
                   My Profile
                 </Link>
-                {/* Mobile Menu: Dashboard */}
                 <Link to={getDashboardLink()} onClick={() => setIsOpen(false)} className="bg-white/10 text-white py-3 rounded-xl font-bold border border-white/10 block">
                   Go to Dashboard
                 </Link>
@@ -226,7 +241,6 @@ const Navbar = () => {
         )}
       </nav>
 
-      {/* Login Modal */}
       <Login isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLoginSuccess={() => window.location.reload()} />
     </>
   );

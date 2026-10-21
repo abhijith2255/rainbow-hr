@@ -37,22 +37,21 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   if (!render) return null;
 
   // ലോഗിൻ സക്സസ് ആകുമ്പോൾ പേജ് റീഫ്രഷ് ചെയ്യാതെ തന്നെ നാബ്‌ബാർ അപ്ഡേറ്റ് ആകാൻ സഹായിക്കുന്നു
-  const handleAuthSuccess = (token, role) => {
+const handleAuthSuccess = (token, role) => {
     localStorage.setItem('authToken', token);
     
     if (!role || role === 'unassigned') {
       setView('role-selection'); 
     } else {
       localStorage.setItem('userRole', role);
-      onClose();
+      onClose(); // Modal close cheyyunnu
       
-      // അഡ്മിനും സ്റ്റാഫും ആണെങ്കിൽ നേരിട്ട് ഡാഷ്ബോർഡിലേക്ക് പോകുന്നു
       if (role === 'admin') {
         navigate('/admin-dashboard');
       } else if (role === 'staff') {
         navigate('/staff-dashboard');
       } else {
-        // കാൻഡിഡേറ്റും എംപ്ലോയറും ആണെങ്കിൽ പേജ് റീഫ്രഷ് ചെയ്യാതെ കോൾബാക്ക് വഴി നാബ്‌ബാർ മാറ്റുന്നു
+        // Candidate login aayal callback execute aavum
         if (onLoginSuccess) onLoginSuccess(); 
       }
     }
