@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { FileText, Bookmark, Search, PencilLine, LogOut, X, CalendarDays } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import ResumePreview from './ResumePreview';
 
@@ -132,15 +133,15 @@ const CandidateDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-6">
-      <div className="max-w-6xl mx-auto space-y-10">
+    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto space-y-8 sm:space-y-10">
         
         {/* Header section with User Data */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-8 rounded-[2rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-6 sm:p-8 rounded-[2rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -z-10 opacity-60 translate-x-1/2 -translate-y-1/2"></div>
           
-          <div className="flex items-center gap-6 z-10 w-full md:w-auto">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-3xl shadow-lg overflow-hidden border-4 border-white shrink-0">
+          <div className="flex items-center gap-4 sm:gap-6 z-10 w-full md:w-auto">
+            <div className="w-16 h-16 sm:w-20 md:w-24 sm:h-20 md:h-24 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-2xl sm:text-3xl shadow-lg overflow-hidden border-4 border-white shrink-0">
               {getProfilePicUrl() ? (
                 <img src={getProfilePicUrl()} alt="Profile" className="w-full h-full object-cover" />
               ) : (
@@ -162,14 +163,16 @@ const CandidateDashboard = () => {
           <div className="flex flex-wrap gap-3 z-10 w-full md:w-auto mt-2 md:mt-0">
             <button 
               onClick={() => navigate('/')} 
-              className="flex-1 md:flex-none px-6 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 md:flex-none px-5 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-sm"
             >
+              <Search className="w-4 h-4" strokeWidth={2.5} />
               Find Jobs
             </button>
             <button 
               onClick={() => navigate('/candidate-profile-edit')} 
-              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-emerald-50 hover:text-emerald-600 transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 md:flex-none px-5 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-emerald-50 hover:text-emerald-600 transition-all flex items-center justify-center gap-2 text-sm"
             >
+              <PencilLine className="w-4 h-4" strokeWidth={2.5} />
               Edit Profile
             </button>
             <button 
@@ -177,7 +180,7 @@ const CandidateDashboard = () => {
               className="px-4 py-3 bg-white border border-slate-200 text-red-500 font-bold rounded-xl shadow-sm hover:bg-red-50 transition-all flex items-center justify-center"
               title="Sign Out"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              <LogOut className="w-5 h-5" strokeWidth={2.5} />
             </button>
           </div>
         </header>
@@ -186,7 +189,7 @@ const CandidateDashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Link to="/candidate/applications" className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center hover:shadow-md hover:-translate-y-1 transition-all">
             <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <FileText className="w-6 h-6" strokeWidth={2} />
             </div>
             <h3 className="text-3xl font-black text-slate-900">{applications.length}</h3>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Applied Jobs <span className="inline-block text-emerald-500 group-hover:translate-x-1 transition-transform">→</span></p>
@@ -194,7 +197,7 @@ const CandidateDashboard = () => {
           
           <Link to="/candidate/saved-jobs" className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center hover:shadow-md hover:-translate-y-1 transition-all">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+              <Bookmark className="w-6 h-6" strokeWidth={2} />
             </div>
             <h3 className="text-3xl font-black text-slate-900">{savedJobsCount}</h3>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Saved Jobs <span className="inline-block text-emerald-500 group-hover:translate-x-1 transition-transform">→</span></p>
@@ -203,10 +206,10 @@ const CandidateDashboard = () => {
         </div>
 
         {/* Applied Jobs Section */}
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+          <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
             <div>
-              <h2 className="text-2xl font-black text-slate-900">My Applications</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">My Applications</h2>
               <p className="text-slate-500 text-sm font-medium mt-1">Track, manage or edit your submitted job applications.</p>
             </div>
             <span className="px-3 py-1 bg-slate-100 text-slate-700 font-extrabold text-xs rounded-xl">
@@ -250,22 +253,22 @@ const CandidateDashboard = () => {
                     <p className="text-xs text-slate-400 mt-1 font-medium">Applicant: <span className="text-slate-700 font-bold">{app.full_name}</span> ({app.phone})</p>
                   </div>
 
-                  <div className="flex items-center gap-2 w-full md:w-auto">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full md:w-auto">
                     <button 
                       onClick={() => setViewingApp(app)} 
-                      className="flex-1 md:flex-none px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
+                      className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
                     >
                       View Details
                     </button>
                     <Link 
                       to="/candidate/applications"
-                      className="flex-1 md:flex-none px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl transition-all text-center"
+                      className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl transition-all text-center"
                     >
-                      View Timeline
+                      Timeline
                     </Link>
                     <button 
                       onClick={() => handleOpenEdit(app)} 
-                      className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-all"
+                      className="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-all"
                     >
                       Edit
                     </button>
@@ -287,20 +290,20 @@ const CandidateDashboard = () => {
       {/* 1. VIEW JOB & APPLICATION DETAILS MODAL */}
       {viewingApp && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-100">
             <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-6">
               <div>
                 <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-black text-[10px] rounded-lg uppercase">{viewingApp.job_type}</span>
                 <h2 className="text-2xl font-black text-slate-900 mt-2">{viewingApp.job_title}</h2>
                 <p className="text-sm font-bold text-slate-500">{viewingApp.company_name} • {viewingApp.location}</p>
               </div>
-              <button onClick={() => setViewingApp(null)} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200">✕</button>
+              <button onClick={() => setViewingApp(null)} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 shrink-0"><X className="w-4 h-4" strokeWidth={2.5} /></button>
             </div>
 
             <div className="space-y-6">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">Application Info</h4>
-                <div className="grid grid-cols-2 gap-3 text-xs font-bold text-slate-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold text-slate-700">
                   <p>Name: <span className="text-slate-900">{viewingApp.full_name}</span></p>
                   <p>Email: <span className="text-slate-900">{viewingApp.email}</span></p>
                   <p>Phone: <span className="text-slate-900">{viewingApp.phone}</span></p>
@@ -368,13 +371,13 @@ const CandidateDashboard = () => {
       {/* 2. EDIT APPLICATION MODAL */}
       {editingApp && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl border border-slate-100">
             <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
               <div>
                 <h3 className="text-xl font-black text-slate-900">Edit Application</h3>
                 <p className="text-xs font-bold text-slate-400">{editingApp.job_title} • {editingApp.company_name}</p>
               </div>
-              <button onClick={() => setEditingApp(null)} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200">✕</button>
+              <button onClick={() => setEditingApp(null)} className="p-2 bg-slate-100 text-slate-600 rounded-full hover:bg-slate-200 shrink-0"><X className="w-4 h-4" strokeWidth={2.5} /></button>
             </div>
 
             <form onSubmit={handleUpdateApplication} className="space-y-4">

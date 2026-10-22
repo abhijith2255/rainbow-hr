@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import {
+  ArrowLeft, Search, RefreshCw, Loader2, Inbox,
+  CheckCircle2, XCircle, Pencil, PlusCircle, ShieldCheck, Clock,
+} from 'lucide-react';
 
 // Filter dropdown-il upayogikkunna motham moderation action keys
 const ACTION_OPTIONS = [
@@ -40,31 +44,30 @@ const COLOR_STYLES = {
   slate: { icon: 'bg-slate-100 text-slate-600', badge: 'bg-slate-100 text-slate-700' },
 };
 
-// Oroke category-യുടെയും icon path
-const ICON_PATHS = {
-  emerald: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-  red: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
-  amber: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
-  blue: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-  indigo: 'M12 4v16m8-8H4',
-  teal: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-  slate: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+// Oroke colour category-ക്കും corresponding Lucide icon
+const ICON_COMPONENTS = {
+  emerald: CheckCircle2,
+  red: XCircle,
+  amber: Pencil,
+  blue: CheckCircle2,
+  indigo: PlusCircle,
+  teal: ShieldCheck,
+  slate: Clock,
 };
 
 // Summary card-il upayogikkunna icon component
-const StatCard = ({ title, value, color, iconPath, subtitle }) => {
+const StatCard = ({ title, value, color, Icon, subtitle }) => {
   const styles = COLOR_STYLES[color] || COLOR_STYLES.slate;
+  const IconComponent = Icon || Clock;
   return (
-    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+    <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start">
         <div>
           <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">{title}</h3>
           <p className="text-3xl font-black text-slate-900 mt-2">{value}</p>
         </div>
         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${styles.icon}`}>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={iconPath}></path>
-          </svg>
+          <IconComponent className="w-5 h-5" strokeWidth={2.5} />
         </div>
       </div>
       {subtitle && <p className="text-xs font-bold text-slate-400 mt-4">{subtitle}</p>}
@@ -156,13 +159,13 @@ const ModerationAuditLog = () => {
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+        <Loader2 className="w-10 h-10 text-slate-900 animate-spin" strokeWidth={2.5} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-6">
+    <div className="min-h-screen bg-slate-50 font-premium pt-10 pb-16 px-6">
       <div className="max-w-6xl mx-auto space-y-8">
 
         {/* Page Header */}
@@ -171,9 +174,7 @@ const ModerationAuditLog = () => {
             to={dashboardLink}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-700 uppercase tracking-wider mb-3"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path>
-            </svg>
+            <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2.5} />
             Back to Dashboard
           </Link>
           <h1 className="text-2xl font-black text-slate-900">Moderation Audit Log</h1>
@@ -193,28 +194,28 @@ const ModerationAuditLog = () => {
             title="Total Actions"
             value={summary?.total || 0}
             color="slate"
-            iconPath={ICON_PATHS.slate}
+            Icon={ICON_COMPONENTS.slate}
             subtitle="All recorded actions"
           />
           <StatCard
             title="Job Approvals"
             value={summary?.job_approvals || 0}
             color="emerald"
-            iconPath={ICON_PATHS.emerald}
+            Icon={ICON_COMPONENTS.emerald}
             subtitle="Approved & activated jobs"
           />
           <StatCard
             title="Application Decisions"
             value={summary?.application_decisions || 0}
             color="blue"
-            iconPath={ICON_PATHS.blue}
+            Icon={ICON_COMPONENTS.blue}
             subtitle="Approved & rejected"
           />
           <StatCard
             title="Job Visibility Changes"
             value={summary?.job_visibility_changes || 0}
             color="amber"
-            iconPath={ICON_PATHS.amber}
+            Icon={ICON_COMPONENTS.amber}
             subtitle="Activated & deactivated"
           />
         </div>
@@ -236,9 +237,7 @@ const ModerationAuditLog = () => {
             </select>
 
             <div className="relative w-full md:flex-1">
-              <svg className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"></path>
-              </svg>
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" strokeWidth={2.5} />
               <input
                 type="text"
                 value={searchInput}
@@ -263,8 +262,9 @@ const ModerationAuditLog = () => {
 
             <button
               onClick={fetchLogs}
-              className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all text-sm whitespace-nowrap"
+              className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all text-sm whitespace-nowrap flex items-center gap-2"
             >
+              <RefreshCw className={`w-4 h-4 ${fetching ? 'animate-spin' : ''}`} strokeWidth={2.5} />
               Refresh
             </button>
           </div>
@@ -278,7 +278,10 @@ const ModerationAuditLog = () => {
 
           {/* Empty State */}
           {!error && logs.length === 0 && (
-            <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-10 text-center">
+            <div className="border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+                <Inbox className="w-6 h-6" strokeWidth={2.5} />
+              </div>
               <p className="text-slate-500 font-bold text-sm">No moderation actions recorded yet.</p>
               {filtersActive && (
                 <>
@@ -300,12 +303,11 @@ const ModerationAuditLog = () => {
               {logs.map((log) => {
                 const color = getColorCategory(log.action);
                 const styles = COLOR_STYLES[color];
+                const LogIcon = ICON_COMPONENTS[color] || Clock;
                 return (
-                  <div key={log.id} className="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl">
+                  <div key={log.id} className="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${styles.icon}`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={ICON_PATHS[color]}></path>
-                      </svg>
+                      <LogIcon className="w-5 h-5" strokeWidth={2.5} />
                     </div>
 
                     <div className="flex-1 min-w-0">

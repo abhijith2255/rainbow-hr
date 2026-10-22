@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Login from '../../pages/login';
 import ApplyJobModal from './ApplyJobModal';
+import { CompanyLogo } from './categoryVisuals';
 
 const JobDetails = () => {
   const { jobId } = useParams();
@@ -182,9 +183,13 @@ const JobDetails = () => {
             {/* Job Header Card */}
             <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
               <div className="flex flex-wrap items-start gap-5">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                  <span className="text-3xl font-black text-slate-800">{(job.company_name || 'J').charAt(0).toUpperCase()}</span>
-                </div>
+                <CompanyLogo
+                  logoUrl={job.company_logo}
+                  name={job.company_name}
+                  iconName={job.category_icon}
+                  themeIndex={job.category || job.id}
+                  size="xl"
+                />
                 <div className="flex-1 min-w-[200px]">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-wider">{job.job_type}</span>
@@ -362,9 +367,13 @@ const JobDetails = () => {
                   className="group bg-white rounded-[2rem] p-7 border border-slate-100 shadow-[0_15px_50px_-25px_rgba(15,23,42,0.2)] hover:shadow-[0_25px_60px_-25px_rgba(16,185,129,0.3)] hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col"
                 >
                   <div className="flex items-center gap-4 mb-5">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center">
-                      <span className="text-lg font-black text-slate-800">{(s.company_name || 'J').charAt(0).toUpperCase()}</span>
-                    </div>
+                    <CompanyLogo
+                      logoUrl={s.company_logo}
+                      name={s.company_name}
+                      iconName={s.category_icon}
+                      themeIndex={s.category || s.id}
+                      size="sm"
+                    />
                     <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-wider">{s.job_type}</span>
                   </div>
                   <h3 className="text-lg font-extrabold text-slate-900 mb-1 group-hover:text-emerald-600 transition-colors">{s.title}</h3>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { CompanyLogo } from './categoryVisuals';
 
 // എല്ലാ അപ്രൂവ്ഡ് ജോബുകളും കാണിക്കുന്ന പ്രത്യേക പേജ്
 const AllJobs = () => {
@@ -106,9 +107,13 @@ const AllJobs = () => {
                 className="group relative bg-white rounded-[2rem] p-7 border border-slate-100 shadow-[0_15px_50px_-25px_rgba(15,23,42,0.2)] hover:shadow-[0_25px_60px_-25px_rgba(16,185,129,0.3)] hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col"
               >
                 <div className="flex justify-between items-start mb-5">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center group-hover:border-emerald-300 transition-colors">
-                    <span className="text-2xl font-black text-slate-800">{(job.company_name || 'J').charAt(0).toUpperCase()}</span>
-                  </div>
+                  <CompanyLogo
+                    logoUrl={job.company_logo}
+                    name={job.company_name}
+                    iconName={job.category_icon}
+                    themeIndex={job.category || job.id}
+                    size="md"
+                  />
                   <div className="flex flex-col items-end gap-2">
                     <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-wider">{job.job_type}</span>
                     {job.has_applied && (

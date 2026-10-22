@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import {
+  LayoutDashboard, FileText, CheckCircle2, Inbox, Layers, History,
+  Building2, Briefcase, Users, ArrowRight, Plus, LogOut, Clock,
+  Menu, X,
+} from 'lucide-react';
 import PostJobModal from '../EmployerDashboard/PostJobModal';
 import StaffJobApprovals from './StaffJobApprovals';
 import StaffApplicationApprovals from './StaffApplicationApprovals';
@@ -15,7 +20,15 @@ const StaffDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('workspace'); // 'workspace', 'applications', 'job-approvals', 'categories'
+  const [activeTab, setActiveTab] = useState('workspace'); // 'workspace', 'applications', 'job-approvals', 'received-applications', 'categories'
+  // Mobile-il sidebar drawer open/close control cheyyan
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Tab maattumbol mobile drawer automatic aayi adakkunnu
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    setSidebarOpen(false);
+  };
 
   useEffect(() => {
     fetchStaffData();
@@ -44,102 +57,136 @@ const StaffDashboard = () => {
     navigate('/');
   };
 
+  const tabTitles = {
+    workspace: dashboardData?.welcome_message || 'My Workspace',
+    applications: 'Candidate Applications',
+    'job-approvals': 'Employer Job Approvals',
+    'received-applications': 'Received Applications',
+    categories: 'Manage Job Categories',
+  };
+
+  // Sidebar tabs (Lucide ഐക്കണുകളോടെ)
+  const tabItems = [
+    { key: 'workspace', label: 'My Workspace', icon: LayoutDashboard },
+    { key: 'applications', label: 'Candidate Verify', icon: FileText, dot: true },
+    { key: 'job-approvals', label: 'Job Approvals', icon: CheckCircle2 },
+    { key: 'received-applications', label: 'Received Applications', icon: Inbox },
+    { key: 'categories', label: 'Manage Categories', icon: Layers },
+  ];
+
+  // Clickable analytics cards — ഓരോന്നും ഒരു dedicated page / ടാബിലേക്ക് പോകുന്നു
+  const analyticsCards = [
+    {
+      label: 'Active Employers', value: dashboardData?.total_employers || 0, sub: 'Hiring companies',
+      icon: Building2, to: '/staff/employers',
+      tint: 'bg-indigo-100 text-indigo-600', blob: 'bg-indigo-100', accent: 'text-indigo-600', ring: 'hover:border-indigo-200',
+    },
+    {
+      label: 'Total Job Posts', value: dashboardData?.total_jobs || 0, sub: 'All postings',
+      icon: Briefcase, to: '/staff/approvals',
+      tint: 'bg-emerald-100 text-emerald-600', blob: 'bg-emerald-100', accent: 'text-emerald-600', ring: 'hover:border-emerald-200',
+    },
+    {
+      label: 'Total Candidates', value: dashboardData?.total_candidates || 0, sub: 'Registered job seekers',
+      icon: Users, to: '/staff/candidates',
+      tint: 'bg-amber-100 text-amber-600', blob: 'bg-amber-100', accent: 'text-amber-600', ring: 'hover:border-amber-200',
+    },
+    {
+      label: 'Total Applications', value: dashboardData?.total_applications || 0, sub: 'Received submissions',
+      icon: FileText, to: '/staff/applications',
+      tint: 'bg-blue-100 text-blue-600', blob: 'bg-blue-100', accent: 'text-blue-600', ring: 'hover:border-blue-200',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50 font-premium flex overflow-hidden">
-      
-      {/* Staff Sidebar */}
-      <aside className="w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm relative z-20 shrink-0">
-        <div className="p-8">
-          <h2 className="text-3xl font-black tracking-tighter text-slate-900 cursor-pointer" onClick={() => navigate('/')}>
-            Rainbow<span className="text-emerald-500">HR.</span>
-          </h2>
-          <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest mt-1 block bg-blue-50 w-max px-2.5 py-1 rounded-md">
-            Staff Portal
-          </span>
+    <div className="min-h-screen bg-slate-50 font-premium">
+
+      {/* Mobile top bar — sidebar drawer തുറക്കാനുള്ള hamburger */}
+      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open navigation"
+          className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-200 transition-colors"
+        >
+          <Menu className="w-5 h-5" strokeWidth={2.5} />
+        </button>
+        <h2 className="text-xl font-black tracking-tighter text-slate-900">Rainbow<span className="text-emerald-500">HR.</span></h2>
+        <div className="w-10 h-10" />
+      </div>
+
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Staff Sidebar — mobile-il drawer, desktop-il fixed */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-slate-200 flex flex-col shadow-sm transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-6 lg:p-8 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-3xl font-black tracking-tighter text-slate-900 cursor-pointer" onClick={() => navigate('/')}>
+              Rainbow<span className="text-emerald-500">HR.</span>
+            </h2>
+            <span className="text-[10px] text-blue-600 font-black uppercase tracking-widest mt-1 block bg-blue-50 w-max px-2.5 py-1 rounded-md">
+              Staff Portal
+            </span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation"
+            className="lg:hidden w-9 h-9 shrink-0 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors"
+          >
+            <X className="w-4 h-4" strokeWidth={2.5} />
+          </button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-2">
-          {/* 1. Workspace Overview */}
-          <button 
-            onClick={() => setActiveTab('workspace')}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold text-sm transition-all ${
-              activeTab === 'workspace' 
-                ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            My Workspace
-          </button>
+        <nav className="flex-1 px-4 space-y-1.5 mt-2 overflow-y-auto">
+          {tabItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => handleTabChange(item.key)}
+                className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-extrabold text-sm transition-all ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-50 border border-transparent'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className="w-5 h-5" strokeWidth={2.5} />
+                  {item.label}
+                </div>
+                {item.dot && <span className="w-2 h-2 rounded-full bg-emerald-500"></span>}
+              </button>
+            );
+          })}
 
-          {/* 2. Candidate Verification */}
-          <button 
-            onClick={() => setActiveTab('applications')}
-            className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-extrabold text-sm transition-all ${
-              activeTab === 'applications' 
-                ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
+          {/* Audit Log page-ilekku pokunna sidebar link */}
+          <Link
+            to="/staff/audit-logs"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold text-sm text-slate-600 hover:bg-slate-50 border border-transparent transition-all"
           >
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-              Candidate Verify
-            </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-          </button>
-
-          {/* 3. Employer Job Approvals */}
-          <button 
-            onClick={() => setActiveTab('job-approvals')}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold text-sm transition-all ${
-              activeTab === 'job-approvals' 
-                ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Job Approvals
-          </button>
-
-          {/* 4. Received Applications (Staff's own posted jobs) */}
-          <button 
-            onClick={() => setActiveTab('received-applications')}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold text-sm transition-all ${
-              activeTab === 'received-applications' 
-                ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-            Received Applications
-          </button>
-
-          {/* 5. Manage Categories */}
-          <button 
-            onClick={() => setActiveTab('categories')}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold text-sm transition-all ${
-              activeTab === 'categories' 
-                ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' 
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-            Manage Categories
-          </button>
+            <History className="w-5 h-5" strokeWidth={2.5} />
+            Audit Log
+          </Link>
         </nav>
 
         <div className="p-6 border-t border-slate-100">
           <button onClick={handleLogout} className="w-full bg-slate-50 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 py-3.5 rounded-xl font-extrabold transition-colors flex items-center justify-center gap-2 shadow-sm">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            <LogOut className="w-5 h-5" strokeWidth={2.5} />
             Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-10 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          
+      <main className="lg:pl-72">
+        <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-10">
+
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-500 rounded-full animate-spin"></div>
@@ -151,36 +198,29 @@ const StaffDashboard = () => {
           ) : (
             <>
               {/* Header */}
-              <header className="flex justify-between items-end mb-8">
-                <div>
-                  <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-                    {activeTab === 'workspace' && (dashboardData?.welcome_message || "My Workspace")}
-                    {activeTab === 'applications' && "Candidate Applications"}
-                    {activeTab === 'job-approvals' && "Employer Job Approvals"}
-                    {activeTab === 'received-applications' && "Received Applications"}
-                    {activeTab === 'categories' && "Manage Job Categories"}
-                  </h1>
+              <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4">
+                <div className="min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{tabTitles[activeTab]}</h1>
                   <p className="text-slate-500 font-medium text-xs mt-1">
                     Manage candidate verifications, company listings, and system tasks.
                   </p>
                 </div>
-                <div className="flex items-center gap-4">
-                  {/* Audit Log page-ilekku pokunna header button */}
-                  <Link 
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
                     to="/staff/audit-logs"
                     className="px-5 py-3 bg-white border border-slate-200 text-slate-700 font-black text-xs rounded-xl shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    <History className="w-4 h-4" strokeWidth={2.5} />
                     Audit Log
                   </Link>
-                  <button 
+                  <button
                     onClick={() => setIsModalOpen(true)}
                     className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    <Plus className="w-4 h-4" strokeWidth={3} />
                     Post a Job
                   </button>
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl shadow-sm flex items-center justify-center font-black text-lg">
+                  <div className="hidden sm:flex w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl shadow-sm items-center justify-center font-black text-lg">
                     S
                   </div>
                 </div>
@@ -189,85 +229,146 @@ const StaffDashboard = () => {
               {/* Dynamic View rendering based on activeTab */}
               {activeTab === 'workspace' && (
                 <div className="space-y-8">
-                  {/* Analytics Summary Cards */}
+                  {/* Clickable Analytics Summary Cards */}
                   <div>
-                    <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Platform Analytics</h2>
+                    <div className="flex items-center gap-2 mb-4">
+                      <LayoutDashboard className="w-4 h-4 text-slate-400" strokeWidth={2.5} />
+                      <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Platform Analytics</h2>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-                      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
-                        <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Active Employers</h3>
-                        <p className="text-3xl font-black text-slate-900">{dashboardData?.total_employers || 0}</p>
-                        <span className="text-xs font-bold text-indigo-500 mt-2 block">Hiring companies</span>
-                      </div>
-
-                      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
-                        <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Total Job Posts</h3>
-                        <p className="text-3xl font-black text-slate-900">{dashboardData?.total_jobs || 0}</p>
-                        <span className="text-xs font-bold text-emerald-600 mt-2 block">All postings</span>
-                      </div>
-
-                      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
-                        <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Total Candidates</h3>
-                        <p className="text-3xl font-black text-slate-900">{dashboardData?.total_candidates || 0}</p>
-                        <span className="text-xs font-bold text-amber-500 mt-2 block">Registered job seekers</span>
-                      </div>
-
-                      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
-                        <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Total Applications</h3>
-                        <p className="text-3xl font-black text-slate-900">{dashboardData?.total_applications || 0}</p>
-                        <span className="text-xs font-bold text-blue-600 mt-2 block">Received submissions</span>
-                      </div>
+                      {analyticsCards.map((card) => {
+                        const Icon = card.icon;
+                        return (
+                          <Link
+                            key={card.label}
+                            to={card.to}
+                            className={`bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1 ${card.ring}`}
+                          >
+                            <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -z-10 opacity-70 group-hover:opacity-100 transition-opacity ${card.blob}`}></div>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="text-slate-500 font-black text-xs uppercase tracking-wider">{card.label}</h3>
+                                <p className="text-4xl font-black text-slate-900 mt-2">{card.value}</p>
+                              </div>
+                              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${card.tint}`}>
+                                <Icon className="w-5 h-5" strokeWidth={2.5} />
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between mt-4">
+                              <p className="text-xs font-bold text-slate-400">{card.sub}</p>
+                              <span className={`text-[11px] font-black flex items-center gap-1 ${card.accent} group-hover:gap-2 transition-all`}>
+                                View <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                              </span>
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Quick Actions */}
                   <div>
-                    <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Quick Actions</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div 
-                      onClick={() => setActiveTab('applications')}
-                      className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
-                    >
-                      <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Candidate Review</h3>
-                      <p className="text-3xl font-black text-slate-900">Verify Applications</p>
-                      <span className="text-xs font-bold text-emerald-600 mt-2 block">Click to view & forward →</span>
+                    <div className="flex items-center gap-2 mb-4">
+                      <CheckCircle2 className="w-4 h-4 text-slate-400" strokeWidth={2.5} />
+                      <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Quick Actions</h2>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <button
+                        onClick={() => setActiveTab('applications')}
+                        className="text-left bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-emerald-200 transition-all group"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider">Candidate Review</h3>
+                          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <FileText className="w-4 h-4" strokeWidth={2.5} />
+                          </div>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 mt-3">Verify Applications</p>
+                        <span className="text-xs font-black text-emerald-600 mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
+                          Open queue <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                        </span>
+                      </button>
 
-                    <div 
-                      onClick={() => setActiveTab('job-approvals')}
-                      className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
-                    >
-                      <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Pending Jobs</h3>
-                      <p className="text-3xl font-black text-slate-900">{dashboardData?.pending_tasks || 0}</p>
-                      <span className="text-xs font-bold text-blue-600 mt-2 block">Review pending jobs →</span>
-                    </div>
+                      <button
+                        onClick={() => setActiveTab('job-approvals')}
+                        className="text-left bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-amber-200 transition-all group"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider">Pending Jobs</h3>
+                          <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <Clock className="w-4 h-4" strokeWidth={2.5} />
+                          </div>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 mt-3">{dashboardData?.pending_tasks || 0}</p>
+                        <span className="text-xs font-black text-amber-600 mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
+                          Review pending jobs <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                        </span>
+                      </button>
 
-                    <div 
-                      onClick={() => setActiveTab('received-applications')}
-                      className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
-                    >
-                      <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">My Posted Jobs</h3>
-                      <p className="text-3xl font-black text-slate-900">Applications</p>
-                      <span className="text-xs font-bold text-emerald-600 mt-2 block">View received applications →</span>
-                    </div>
+                      <button
+                        onClick={() => setActiveTab('received-applications')}
+                        className="text-left bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-blue-200 transition-all group"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider">My Posted Jobs</h3>
+                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <Inbox className="w-4 h-4" strokeWidth={2.5} />
+                          </div>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 mt-3">Applications</p>
+                        <span className="text-xs font-black text-blue-600 mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
+                          View received applications <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                        </span>
+                      </button>
 
-                    <div 
-                      onClick={() => setActiveTab('categories')}
-                      className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
-                    >
-                      <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Categories</h3>
-                      <p className="text-3xl font-black text-slate-900">Configure</p>
-                      <span className="text-xs font-bold text-slate-500 mt-2 block">Add or edit categories →</span>
-                    </div>
+                      <button
+                        onClick={() => setActiveTab('categories')}
+                        className="text-left bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-slate-300 transition-all group"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider">Categories</h3>
+                          <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
+                            <Layers className="w-4 h-4" strokeWidth={2.5} />
+                          </div>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 mt-3">Configure</p>
+                        <span className="text-xs font-black text-slate-500 mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
+                          Add or edit categories <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                        </span>
+                      </button>
 
-                    {/* Audit Log page-ilekku pokunna quick action card */}
-                    <Link 
-                      to="/staff/audit-logs"
-                      className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
-                    >
-                      <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Moderation Audit Log</h3>
-                      <p className="text-3xl font-black text-slate-900">History</p>
-                      <span className="text-xs font-bold text-blue-600 mt-2 block">Browse all moderation actions →</span>
-                    </Link>
+                      <Link
+                        to="/staff/applications"
+                        className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-indigo-200 transition-all group"
+                      >
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider">All Applications</h3>
+                          <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <FileText className="w-4 h-4" strokeWidth={2.5} />
+                          </div>
+                        </div>
+                        <p className="text-2xl font-black text-slate-900 mt-3">{dashboardData?.total_applications || 0}</p>
+                        <span className="text-xs font-black text-indigo-600 mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
+                          Open full list <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                        </span>
+                      </Link>
+
+                      <Link
+                        to="/staff/audit-logs"
+                        className="bg-slate-900 p-6 rounded-[2rem] border border-slate-800 shadow-lg hover:-translate-y-1 hover:shadow-2xl transition-all group relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/20 rounded-full blur-3xl -z-10 group-hover:bg-emerald-500/30 transition-colors"></div>
+                        <div className="flex justify-between items-start">
+                          <h3 className="text-emerald-400 font-black text-xs uppercase tracking-wider">Moderation Audit Log</h3>
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                            <History className="w-4 h-4" strokeWidth={2.5} />
+                          </div>
+                        </div>
+                        <p className="text-2xl font-black text-white mt-3">History</p>
+                        <span className="text-xs font-black text-emerald-400 mt-2 flex items-center gap-1 group-hover:gap-2 transition-all">
+                          Browse all moderation actions <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                        </span>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -276,7 +377,9 @@ const StaffDashboard = () => {
               {activeTab === 'applications' && <StaffApplicationApprovals />}
               {activeTab === 'job-approvals' && <StaffJobApprovals />}
               {activeTab === 'received-applications' && <StaffReceivedApplications />}
-              {activeTab === 'categories' && <ManageCategories />}
+              {/* embedded=true — StaffDashboard-inte sidebar thanne upayogikkunnathu kondu
+                  ManageCategories swantham sidebar onnum render cheyyilla (double sidebar ozhivakkan) */}
+              {activeTab === 'categories' && <ManageCategories embedded />}
             </>
           )}
 
@@ -284,10 +387,10 @@ const StaffDashboard = () => {
       </main>
 
       {/* Post Job Modal */}
-      <PostJobModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onJobPosted={fetchStaffData} 
+      <PostJobModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onJobPosted={fetchStaffData}
         portalLabel="Staff Portal"
       />
     </div>

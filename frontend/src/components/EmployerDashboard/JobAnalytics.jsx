@@ -36,7 +36,7 @@ const JobAnalytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-6 flex justify-center">
+      <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-4 sm:px-6 flex justify-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -77,7 +77,7 @@ const JobAnalytics = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-6">
+    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto space-y-8">
 
         {/* Page Header */}

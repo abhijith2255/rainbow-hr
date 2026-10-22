@@ -1,7 +1,17 @@
 from django.urls import path
 from .views.auth_views import login_api, register_api
 # താഴത്തെ വരിയിൽ staff_dashboard_data എന്നത് പുതുതായി ആഡ് ചെയ്തു
-from .views.dashboard_views import get_admin_dashboard_data, admin_staff_list_api, admin_create_staff_api, staff_dashboard_data, moderation_audit_logs_api
+from .views.dashboard_views import (
+    get_admin_dashboard_data,
+    admin_staff_list_api,
+    admin_create_staff_api,
+    staff_dashboard_data,
+    moderation_audit_logs_api,
+    admin_employers_list_api,
+    admin_candidates_list_api,
+    admin_verify_employer_api,
+    staff_activity_api,
+)
 from .views.profile_views import set_role_api, get_candidate_dashboard, get_employer_dashboard, profile_api
 
 urlpatterns = [
@@ -22,4 +32,10 @@ urlpatterns = [
 
     # Moderation Audit Log (Staff / Admin)
     path('moderation/audit-logs/', moderation_audit_logs_api, name='moderation-audit-logs'),
+
+    # Admin / Staff detail pages (analytics cards-ൽ നിന്ന് navigate ചെയ്യുന്നു)
+    path('admin/employers/', admin_employers_list_api, name='admin-employers-list'),
+    path('admin/candidates/', admin_candidates_list_api, name='admin-candidates-list'),
+    path('admin/employers/<int:user_id>/verify/', admin_verify_employer_api, name='admin-verify-employer'),
+    path('staff-activity/', staff_activity_api, name='staff-activity'),
 ]

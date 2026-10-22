@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import {
+  LayoutDashboard, Layers, CheckCircle2, Users, Building2, History,
+  Briefcase, FileText, Clock, ArrowRight, Activity, ShieldCheck, LogOut,
+  Menu, X,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminDashboard = () => {
@@ -8,6 +13,8 @@ const AdminDashboard = () => {
   const { logout } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Mobile-il sidebar drawer open/close control cheyyan
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -18,8 +25,6 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('authToken');
       const config = { headers: { 'Authorization': `Bearer ${token}` } };
-      
-      // Dashboard summary data mathram edukkunnu
       const res = await axios.get('http://127.0.0.1:8000/api/accounts/admin/dashboard-data/', config);
       setDashboardData(res.data);
     } catch (err) {
@@ -34,211 +39,292 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   const pendingCount = dashboardData?.pending_jobs?.length || 0;
 
+  // Sidebar navigation (പ്രീമിയം ഡാർക്ക് തീം)
+  const navItems = [
+    { label: 'Dashboard Overview', to: '/admin-dashboard', icon: LayoutDashboard, active: true },
+    { label: 'Manage Categories', to: '/admin/categories', icon: Layers },
+    { label: 'Job Approvals', to: '/admin/approvals', icon: CheckCircle2, badge: pendingCount },
+    { label: 'Companies / Employers', to: '/admin/employers', icon: Building2 },
+    { label: 'Candidates', to: '/admin/candidates', icon: Users },
+    { label: 'Applications', to: '/admin/applications', icon: FileText },
+    { label: 'Manage Staffs', to: '/admin/staffs', icon: Users },
+    { label: 'Staff Activity', to: '/admin/staff-activity', icon: Activity },
+  ];
+
+  // Clickable analytics summary cards — ഓരോന്നും ഒരു dedicated detail page-ലേക്ക് പോകുന്നു
+  const analyticsCards = [
+    {
+      label: 'Active Employers', value: dashboardData?.total_employers || 0, sub: 'Hiring companies',
+      icon: Building2, to: '/admin/employers',
+      tint: 'bg-indigo-100 text-indigo-600', blob: 'bg-indigo-100', accent: 'text-indigo-600', ring: 'hover:border-indigo-200',
+    },
+    {
+      label: 'Total Job Posts', value: dashboardData?.total_jobs || 0, sub: 'All postings',
+      icon: Briefcase, to: '/admin/approvals',
+      tint: 'bg-emerald-100 text-emerald-600', blob: 'bg-emerald-100', accent: 'text-emerald-600', ring: 'hover:border-emerald-200',
+    },
+    {
+      label: 'Total Candidates', value: dashboardData?.total_candidates || 0, sub: 'Registered job seekers',
+      icon: Users, to: '/admin/candidates',
+      tint: 'bg-amber-100 text-amber-600', blob: 'bg-amber-100', accent: 'text-amber-600', ring: 'hover:border-amber-200',
+    },
+    {
+      label: 'Total Applications', value: dashboardData?.total_applications || 0, sub: 'Received submissions',
+      icon: FileText, to: '/admin/applications',
+      tint: 'bg-blue-100 text-blue-600', blob: 'bg-blue-100', accent: 'text-blue-600', ring: 'hover:border-blue-200',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50 font-premium flex overflow-hidden">
-      
-      {/* Admin Sidebar */}
-      <aside className="w-72 bg-slate-950 text-white flex flex-col shadow-2xl z-20">
-        <div className="p-8 border-b border-white/10">
-          <h2 className="text-3xl font-black tracking-tighter">Rainbow<span className="text-emerald-500">HR.</span></h2>
-          <span className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-1 block">Super Admin Dashboard</span>
+    <div className="min-h-screen bg-slate-50 font-premium">
+
+      {/* Mobile top bar — sidebar drawer തുറക്കാനുള്ള hamburger */}
+      <div className="lg:hidden sticky top-0 z-30 bg-slate-950 text-white px-4 py-3 flex items-center justify-between shadow-xl">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open navigation"
+          className="w-10 h-10 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+        >
+          <Menu className="w-5 h-5" strokeWidth={2.5} />
+        </button>
+        <h2 className="text-xl font-black tracking-tighter">Rainbow<span className="text-emerald-500">HR.</span></h2>
+        <div className="w-10 h-10" />
+      </div>
+
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Admin Sidebar — mobile-il drawer, desktop-il fixed */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-slate-950 text-white flex flex-col shadow-2xl transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-6 lg:p-8 border-b border-white/10 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-3xl font-black tracking-tighter">Rainbow<span className="text-emerald-500">HR.</span></h2>
+            <span className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-1 block">Super Admin Dashboard</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close navigation"
+            className="lg:hidden w-9 h-9 shrink-0 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+          >
+            <X className="w-4 h-4" strokeWidth={2.5} />
+          </button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-6">
-          <Link to="/admin-dashboard" className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all bg-emerald-500 text-slate-950 shadow-lg">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"></path></svg>
-            Dashboard Overview
-          </Link>
-          <Link to={localStorage.getItem('userRole') === 'staff' ? '/staff/categories' : '/admin/categories'} className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold">
-  Manage Categories
-</Link>
-          {/* Route to separate Approvals page */}
-          <Link to="/admin/approvals" className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-bold transition-all text-slate-400 hover:bg-white/5 hover:text-white">
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              Job Approvals
-            </div>
-            {pendingCount > 0 && <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">{pendingCount}</span>}
-          </Link>
-
-          {/* Route to separate Staffs page */}
-          <Link to="/admin/staffs" className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all text-slate-400 hover:bg-white/5 hover:text-white">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            Manage Staffs
-          </Link>
-          
-           <Link to="/admin/employers" className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all text-slate-400 hover:bg-white/5 hover:text-white">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-            Companies / Employers
-          </Link>
+        <nav className="flex-1 px-4 space-y-1.5 mt-6 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.to + item.label}
+                to={item.to}
+                onClick={() => setSidebarOpen(false)}
+                className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl font-bold text-sm transition-all ${
+                  item.active
+                    ? 'bg-emerald-500 text-slate-950 shadow-lg'
+                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className="w-5 h-5" strokeWidth={2.5} />
+                  {item.label}
+                </div>
+                {item.badge > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{item.badge}</span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="p-6 border-t border-white/10">
-          <button onClick={handleLogout} className="w-full bg-white/5 hover:bg-red-500 text-slate-300 hover:text-white py-3.5 rounded-xl font-extrabold transition-colors">
+          <button
+            onClick={handleLogout}
+            className="w-full bg-white/5 hover:bg-red-500 text-slate-300 hover:text-white py-3.5 rounded-xl font-extrabold transition-colors flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4" strokeWidth={2.5} />
             Logout
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-10 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
-          
-          <header className="mb-10 pb-6 border-b border-slate-200 flex flex-wrap items-end justify-between gap-4">
+      <main className="lg:pl-72">
+        <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-10">
+
+          <header className="mb-8 lg:mb-10 pb-6 border-b border-slate-200 flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl font-black text-slate-900 tracking-tight">Platform Overview</h1>
-              <p className="text-slate-500 font-medium text-sm mt-1">{dashboardData?.welcome_message || "Manage platform operations seamlessly."}</p>
+              <p className="text-slate-500 font-medium text-sm mt-1">
+                {dashboardData?.welcome_message || 'Manage platform operations seamlessly.'}
+              </p>
             </div>
-            {/* Audit Log page-ilekku pokunna header button */}
-            <Link to="/admin/audit-logs" className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all text-sm flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+            <Link
+              to="/admin/audit-logs"
+              className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all text-sm flex items-center gap-2"
+            >
+              <History className="w-4 h-4" strokeWidth={2.5} />
               Audit Log
             </Link>
           </header>
 
           <div className="space-y-8">
-            {/* Analytics Summary Cards */}
+            {/* Clickable Analytics Summary Cards */}
             <div>
-              <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Platform Analytics</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck className="w-4 h-4 text-slate-400" strokeWidth={2.5} />
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Platform Analytics</h2>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-full blur-2xl -z-10"></div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Active Employers</h3>
-                      <p className="text-4xl font-black text-slate-900 mt-2">{dashboardData?.total_employers || 0}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    </div>
-                  </div>
-                  <p className="text-xs font-bold text-slate-400 mt-4">Hiring companies</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full blur-2xl -z-10"></div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Job Posts</h3>
-                      <p className="text-4xl font-black text-slate-900 mt-2">{dashboardData?.total_jobs || 0}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    </div>
-                  </div>
-                  <p className="text-xs font-bold text-slate-400 mt-4">All postings</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-full blur-2xl -z-10"></div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Candidates</h3>
-                      <p className="text-4xl font-black text-slate-900 mt-2">{dashboardData?.total_candidates || 0}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    </div>
-                  </div>
-                  <p className="text-xs font-bold text-slate-400 mt-4">Registered job seekers</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full blur-2xl -z-10"></div>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Applications</h3>
-                      <p className="text-4xl font-black text-slate-900 mt-2">{dashboardData?.total_applications || 0}</p>
-                    </div>
-                    <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    </div>
-                  </div>
-                  <p className="text-xs font-bold text-slate-400 mt-4">Received submissions</p>
-                </div>
+                {analyticsCards.map((card) => {
+                  const Icon = card.icon;
+                  return (
+                    <Link
+                      key={card.label}
+                      to={card.to}
+                      className={`bg-white p-6 rounded-3xl border border-slate-100 shadow-sm relative overflow-hidden group transition-all hover:shadow-xl hover:-translate-y-1 ${card.ring}`}
+                    >
+                      <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -z-10 opacity-70 group-hover:opacity-100 transition-opacity ${card.blob}`}></div>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">{card.label}</h3>
+                          <p className="text-4xl font-black text-slate-900 mt-2">{card.value}</p>
+                        </div>
+                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${card.tint}`}>
+                          <Icon className="w-5 h-5" strokeWidth={2.5} />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between mt-4">
+                        <p className="text-xs font-bold text-slate-400">{card.sub}</p>
+                        <span className={`text-[11px] font-black flex items-center gap-1 ${card.accent} group-hover:gap-2 transition-all`}>
+                          View <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
 
             {/* Operational Shortcuts */}
             <div>
-              <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Operations</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="w-4 h-4 text-slate-400" strokeWidth={2.5} />
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">Operations</h2>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              
-              <div onClick={() => navigate('/admin/approvals')} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-full blur-2xl -z-10 group-hover:bg-red-100 transition-colors"></div>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Pending Approvals</h3>
-                    <p className="text-4xl font-black text-slate-900 mt-2">{pendingCount}</p>
+
+                {/* Pending Approvals → moderation queue */}
+                <Link
+                  to="/admin/approvals"
+                  className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-red-200 transition-all relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-red-100 rounded-full blur-2xl -z-10 opacity-70 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Pending Approvals</h3>
+                      <p className="text-4xl font-black text-slate-900 mt-2">{pendingCount}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center">
+                      <Clock className="w-5 h-5" strokeWidth={2.5} />
+                    </div>
                   </div>
-                  <div className="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <p className="text-xs font-black text-red-600 mt-4 flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Review Now <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                  </p>
+                </Link>
+
+                {/* Manage Staffs */}
+                <Link
+                  to="/admin/staffs"
+                  className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 transition-all relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-100 rounded-full blur-2xl -z-10 opacity-70 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Staffs</h3>
+                      <p className="text-4xl font-black text-slate-900 mt-2">{dashboardData?.total_staffs || 0}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
+                      <Users className="w-5 h-5" strokeWidth={2.5} />
+                    </div>
                   </div>
-                </div>
-                <p className="text-xs font-bold text-blue-600 mt-4 flex items-center gap-1 group-hover:gap-2 transition-all">Review Now <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg></p>
+                  <p className="text-xs font-black text-blue-600 mt-4 flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Manage Staffs <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                  </p>
+                </Link>
+
+                {/* Active Jobs (highlight card) */}
+                <Link
+                  to="/admin/approvals"
+                  className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -z-10 group-hover:bg-emerald-500/30 transition-colors"></div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-emerald-400 font-bold text-xs uppercase tracking-wider">Active Jobs</h3>
+                      <p className="text-4xl font-black text-white mt-2">{dashboardData?.active_jobs || 0}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center">
+                      <Briefcase className="w-5 h-5" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                  <p className="text-xs font-black text-emerald-400 mt-4 flex items-center gap-1 group-hover:gap-2 transition-all">
+                    View Postings <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                  </p>
+                </Link>
+
+                {/* Staff Activity */}
+                <Link
+                  to="/admin/staff-activity"
+                  className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-slate-300 transition-all relative overflow-hidden group"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-slate-100 rounded-full blur-2xl -z-10 group-hover:bg-slate-200 transition-colors"></div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Staff Activity</h3>
+                      <p className="text-4xl font-black text-slate-900 mt-2">Log</p>
+                    </div>
+                    <div className="w-10 h-10 bg-slate-100 text-slate-600 rounded-2xl flex items-center justify-center">
+                      <Activity className="w-5 h-5" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                  <p className="text-xs font-black text-slate-600 mt-4 flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Who Did What <ArrowRight className="w-3 h-3" strokeWidth={3} />
+                  </p>
+                </Link>
               </div>
-
-              <div onClick={() => navigate('/admin/staffs')} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full blur-2xl -z-10 group-hover:bg-blue-100 transition-colors"></div>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Staffs</h3>
-                    <p className="text-4xl font-black text-slate-900 mt-2">{dashboardData?.total_staffs || 0}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                  </div>
-                </div>
-                <p className="text-xs font-bold text-blue-600 mt-4 flex items-center gap-1 group-hover:gap-2 transition-all">Manage Staffs <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg></p>
-              </div>
-
-              <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-lg relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -z-10"></div>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-emerald-400 font-bold text-xs uppercase tracking-wider">Active Jobs</h3>
-                    <p className="text-4xl font-black text-white mt-2">{dashboardData?.active_jobs || 0}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Audit Log page-ilekku pokunna clickable card */}
-              <Link to="/admin/audit-logs" className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-slate-100 rounded-full blur-2xl -z-10 group-hover:bg-slate-200 transition-colors"></div>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-slate-500 font-bold text-xs uppercase tracking-wider">Moderation Audit Log</h3>
-                    <p className="text-4xl font-black text-slate-900 mt-2">History</p>
-                  </div>
-                  <div className="w-10 h-10 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                  </div>
-                </div>
-                <p className="text-xs font-bold text-blue-600 mt-4 flex items-center gap-1 group-hover:gap-2 transition-all">View Actions <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"></path></svg></p>
-              </Link>
-
-            </div>
             </div>
 
             {/* Recent Activities */}
             <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-2 mb-6">
+                <History className="w-4 h-4 text-slate-400" strokeWidth={2.5} />
                 <h3 className="text-xl font-extrabold text-slate-900">Recent Activities</h3>
               </div>
               <div className="space-y-4">
-                {dashboardData?.recent_activities?.length > 0 ? dashboardData.recent_activities.map((act, i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                    <p className="font-bold text-slate-700 text-sm">{act}</p>
-                  </div>
-                )) : (
+                {dashboardData?.recent_activities?.length > 0 ? (
+                  dashboardData.recent_activities.map((act, i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                      <p className="font-bold text-slate-700 text-sm">{act}</p>
+                    </div>
+                  ))
+                ) : (
                   <p className="text-slate-400 font-bold">No recent activities found.</p>
                 )}
               </div>

@@ -43,7 +43,7 @@ const EmployerApplications = () => {
   const filteredJobTitle = jobId && applications.length > 0 ? applications[0].job_title : null;
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 md:pt-32 pb-16 px-6">
+    <div className="min-h-screen bg-slate-50 pt-28 md:pt-32 pb-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
 
         {/* Page Header */}

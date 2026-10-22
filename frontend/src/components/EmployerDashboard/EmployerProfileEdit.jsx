@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import {
+  ArrowLeft, Building2, Globe, User, MapPin, Upload, CheckCircle2,
+  Loader2, Briefcase, Camera, Image as ImageIcon, FileText,
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+
+const API_ROOT = 'http://127.0.0.1:8000';
+
+// Backend-il ninnum varunna relative media URL-ne full URL aakki maattunnu
+const toAbsoluteUrl = (url) => {
+  if (!url) return null;
+  return url.startsWith('http') ? url : `${API_ROOT}${url}`;
+};
 
 const EmployerProfileEdit = () => {
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -15,12 +29,13 @@ const EmployerProfileEdit = () => {
 
   const [files, setFiles] = useState({ companyLogo: null });
   const [logoPreview, setLogoPreview] = useState(null); // Logo preview kanikkanulla state
+  const [existingLogo, setExistingLogo] = useState(null); // Database-il already ulla logo
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
+        const res = await axios.get(`${API_ROOT}/api/accounts/profile/`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -34,9 +49,9 @@ const EmployerProfileEdit = () => {
         });
 
         // Database-il already logo undenkil ath preview aayi set cheyyunnu
-        if (res.data.companyLogo) {
-          setLogoPreview(res.data.companyLogo.startsWith('http') ? res.data.companyLogo : `http://127.0.0.1:8000${res.data.companyLogo}`);
-        }
+        const logo = toAbsoluteUrl(res.data.companyLogo);
+        setExistingLogo(logo);
+        if (logo) setLogoPreview(logo);
       } catch (err) {
         setError('Failed to load profile data.');
       } finally {
@@ -69,15 +84,12 @@ const EmployerProfileEdit = () => {
 
     try {
       const token = localStorage.getItem('authToken');
-      await axios.put('http://127.0.0.1:8000/api/accounts/profile/', submitData, {
+      await axios.put(`${API_ROOT}/api/accounts/profile/`, submitData, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
       setMessage('Company Profile updated successfully!');
-      
-      // Save cheyth kazhinjal Navbar update aavan vendi window reload cheythu dashboardilekk pokunnu
-      setTimeout(() => {
-        window.location.href = '/employer-dashboard';
-      }, 1000);
+      refreshProfile(); // Navbar-le logo/name udane update aavan
+      setTimeout(() => navigate('/employer-dashboard'), 1000);
     } catch (err) {
       setError('Failed to update profile.');
     } finally {
@@ -85,74 +97,238 @@ const EmployerProfileEdit = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" strokeWidth={2.5} />
+      </div>
+    );
+  }
+
+  // Form field-inte common style (repeat ozhivakkan)
+  const inputClass = 'w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-blue-500 outline-none transition-all';
+  const labelClass = 'block text-[11px] font-extrabold text-slate-500 mb-2 uppercase tracking-wider';
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-4">
-      <div className="max-w-3xl mx-auto bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100 p-8 md:p-12">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 font-black text-[10px] uppercase tracking-widest rounded-full mb-2">Employer Settings</span>
-            <h1 className="text-3xl font-black text-slate-900">Company Profile</h1>
-          </div>
-          <button onClick={() => navigate('/employer-dashboard')} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto space-y-6">
+
+        {/* Back + title */}
+        <div className="flex items-center justify-between gap-4">
+          <button
+            onClick={() => navigate('/employer-dashboard')}
+            className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold text-sm transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
+            Back to Dashboard
           </button>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-700 font-black text-[10px] uppercase tracking-widest rounded-full">
+            <Briefcase className="w-3 h-3" strokeWidth={2.5} /> Employer Profile
+          </span>
         </div>
 
-        {message && <div className="mb-6 p-4 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-xl text-center">{message}</div>}
-        {error && <div className="mb-6 p-4 bg-red-50 text-red-600 font-bold text-xs rounded-xl text-center">{error}</div>}
+        {message && (
+          <div className="p-4 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-xl text-center border border-emerald-100 flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} /> {message}
+          </div>
+        )}
+        {error && <div className="p-4 bg-red-50 text-red-600 font-bold text-xs rounded-xl text-center border border-red-100">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          
-          {/* Logo Preview Section */}
-          <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-            <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm shrink-0">
-              {logoPreview ? (
-                <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-2xl font-black text-slate-300">C</span>
-              )}
+
+          {/* ---------- Cover + Logo ---------- */}
+          <div className="bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-slate-100 overflow-hidden">
+            <div className="relative h-32 sm:h-40 bg-gradient-to-r from-slate-900 via-blue-800 to-blue-600">
+              <div className="absolute inset-0 opacity-25" style={{ backgroundImage: 'radial-gradient(circle at 15% 25%, rgba(255,255,255,0.6) 0, transparent 40%), radial-gradient(circle at 85% 75%, rgba(255,255,255,0.45) 0, transparent 45%)' }} />
             </div>
-            <div className="flex-1">
-              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Company Logo</label>
-              <input type="file" name="companyLogo" onChange={handleFileChange} accept="image/*" className="w-full text-sm font-bold text-slate-800 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-xs file:font-extrabold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 transition-all outline-none cursor-pointer" />
+
+            <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-5 -mt-14 sm:-mt-16">
+                {/* Logo — click cheythal maattam */}
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0">
+                  <input
+                    id="employer-logo-input"
+                    type="file"
+                    name="companyLogo"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <div className="w-full h-full rounded-[1.75rem] bg-white p-2 shadow-xl shadow-slate-900/10">
+                    <div className="w-full h-full rounded-[1.4rem] overflow-hidden bg-slate-50 flex items-center justify-center">
+                      {logoPreview ? (
+                        <img src={logoPreview} alt="Company logo" className="w-full h-full object-contain p-1.5" />
+                      ) : (
+                        <Building2 className="w-10 h-10 text-slate-300" strokeWidth={2} />
+                      )}
+                    </div>
+                  </div>
+                  <label
+                    htmlFor="employer-logo-input"
+                    className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-lg cursor-pointer hover:bg-blue-600 transition-colors"
+                    title="Change logo"
+                  >
+                    <Camera className="w-4 h-4" strokeWidth={2.5} />
+                  </label>
+                </div>
+
+                <div className="min-w-0 flex-1 sm:pb-2">
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight truncate">
+                    {formData.companyName || 'Your Company'}
+                  </h1>
+                  <p className="text-slate-500 font-bold text-sm mt-0.5 truncate">
+                    {formData.industry || 'Add your industry sector'}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] font-bold text-slate-400">
+                    {formData.companyLocation && (
+                      <span className="inline-flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" strokeWidth={2.5} />{formData.companyLocation}</span>
+                    )}
+                    {formData.hrName && (
+                      <span className="inline-flex items-center gap-1.5"><User className="w-3.5 h-3.5" strokeWidth={2.5} />HR: {formData.hrName}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* ... (Bakki form fields pazhayath pole thanne) ... */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Company Name</label>
-              <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-blue-500 outline-none transition-all" required />
+          {/* ---------- Sectioned grid ---------- */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* LEFT COLUMN */}
+            <div className="lg:col-span-2 space-y-6">
+
+              {/* Company Details */}
+              <div className="bg-white rounded-[1.75rem] shadow-[0_12px_35px_rgba(0,0,0,0.05)] border border-slate-100 p-6 sm:p-8">
+                <div className="flex items-center gap-2.5 mb-6">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <Building2 className="w-4 h-4" strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-slate-900">Company Details</h2>
+                    <p className="text-[11px] font-semibold text-slate-400">Basic information about your company</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Company Name</label>
+                    <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} className={inputClass} required />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Industry Sector</label>
+                    <input type="text" name="industry" value={formData.industry} onChange={handleChange} className={inputClass} placeholder="e.g. IT, Healthcare, Finance" required />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Headquarters / Location</label>
+                    <input type="text" name="companyLocation" value={formData.companyLocation} onChange={handleChange} className={inputClass} placeholder="e.g. Kochi, Kerala" required />
+                  </div>
+                </div>
+              </div>
+
+              {/* About Company */}
+              <div className="bg-white rounded-[1.75rem] shadow-[0_12px_35px_rgba(0,0,0,0.05)] border border-slate-100 p-6 sm:p-8">
+                <div className="flex items-center gap-2.5 mb-6">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <FileText className="w-4 h-4" strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-slate-900">About Company</h2>
+                    <p className="text-[11px] font-semibold text-slate-400">Tell candidates about your culture</p>
+                  </div>
+                </div>
+                <label className={labelClass}>Company Description</label>
+                <textarea
+                  name="companyDescription"
+                  value={formData.companyDescription}
+                  onChange={handleChange}
+                  rows="5"
+                  className={`${inputClass} resize-none leading-relaxed`}
+                  placeholder="Briefly describe your company, culture, and what you do..."
+                ></textarea>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">HR / Manager Name</label>
-              <input type="text" name="hrName" value={formData.hrName} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-blue-500 outline-none transition-all" required />
-            </div>
-            <div>
-              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Industry Sector</label>
-              <input type="text" name="industry" value={formData.industry} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-blue-500 outline-none transition-all" placeholder="e.g. IT, Healthcare, Finance" required />
-            </div>
-            <div>
-              <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Headquarters / Location</label>
-              <input type="text" name="companyLocation" value={formData.companyLocation} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-blue-500 outline-none transition-all" placeholder="e.g. Kochi, Kerala" required />
+
+            {/* RIGHT COLUMN — Contact & Documents */}
+            <div className="space-y-6">
+
+              {/* Contact / HR */}
+              <div className="bg-white rounded-[1.75rem] shadow-[0_12px_35px_rgba(0,0,0,0.05)] border border-slate-100 p-6 sm:p-8">
+                <div className="flex items-center gap-2.5 mb-6">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <User className="w-4 h-4" strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-slate-900">Contact &amp; HR</h2>
+                    <p className="text-[11px] font-semibold text-slate-400">Hiring point of contact</p>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <div>
+                    <label className={labelClass}>HR / Manager Name</label>
+                    <input type="text" name="hrName" value={formData.hrName} onChange={handleChange} className={inputClass} required />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Company Website</label>
+                    <div className="relative">
+                      <Globe className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" strokeWidth={2.5} />
+                      <input type="url" name="companyWebsite" value={formData.companyWebsite} onChange={handleChange} className={`${inputClass} pl-11`} placeholder="https://www.example.com" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Company Logo / Documents */}
+              <div className="bg-white rounded-[1.75rem] shadow-[0_12px_35px_rgba(0,0,0,0.05)] border border-slate-100 p-6 sm:p-8">
+                <div className="flex items-center gap-2.5 mb-6">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <ImageIcon className="w-4 h-4" strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-slate-900">Brand Asset</h2>
+                    <p className="text-[11px] font-semibold text-slate-400">Company logo</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center shrink-0">
+                    {logoPreview ? (
+                      <img src={logoPreview} alt="Logo preview" className="w-full h-full object-contain p-1.5" />
+                    ) : (
+                      <Building2 className="w-7 h-7 text-slate-300" strokeWidth={2} />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor="employer-logo-input" className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs cursor-pointer hover:bg-slate-100 transition-colors">
+                      <Upload className="w-4 h-4" strokeWidth={2.5} />
+                      {existingLogo || files.companyLogo ? 'Replace Logo' : 'Upload Logo'}
+                    </label>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-3 font-medium">PNG or JPG, square images look best.</p>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Company Website (URL)</label>
-            <input type="url" name="companyWebsite" value={formData.companyWebsite} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-blue-500 outline-none transition-all" placeholder="https://www.example.com" />
+          {/* ---------- Save ---------- */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+            <button
+              type="button"
+              onClick={() => navigate('/employer-dashboard')}
+              className="px-6 py-4 rounded-xl bg-white border border-slate-200 text-slate-600 font-black text-sm hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-black rounded-xl transition-all shadow-lg shadow-blue-500/30 tracking-wide"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2.5} /> : <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />}
+              {saving ? 'Saving Profile...' : 'Save Company Details'}
+            </button>
           </div>
-
-          <div>
-            <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">About Company</label>
-            <textarea name="companyDescription" value={formData.companyDescription} onChange={handleChange} rows="4" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-blue-500 outline-none transition-all resize-none" placeholder="Briefly describe your company, culture, and what you do..."></textarea>
-          </div>
-
-          <button type="submit" disabled={saving} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-blue-500/30 tracking-wide mt-6">
-            {saving ? 'Saving Profile...' : 'Save Company Details'}
-          </button>
         </form>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { CompanyLogo } from './categoryVisuals';
 
 // ഹോം പേജിൽ കാണിക്കുന്ന പരമാവധി ജോബുകൾ
 const MAX_FEATURED_JOBS = 4;
@@ -75,11 +76,13 @@ const FeaturedJobs = () => {
                 <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-emerald-300 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                 <div className="flex justify-between items-start mb-6 relative z-10">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex items-center justify-center shadow-inner group-hover:border-emerald-300 transition-colors">
-                    <span className="text-3xl font-black text-slate-800">
-                      {(job.company_name || 'J').charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  <CompanyLogo
+                    logoUrl={job.company_logo}
+                    name={job.company_name}
+                    iconName={job.category_icon}
+                    themeIndex={job.category || job.id}
+                    size="lg"
+                  />
                   <div className="flex gap-2">
                     <span className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-xs font-black uppercase tracking-wider">
                       {job.job_type}

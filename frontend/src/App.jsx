@@ -28,6 +28,10 @@ import EmployerProfileEdit from './components/EmployerDashboard/EmployerProfileE
 import ATSPipeline from './components/EmployerDashboard/ATSPipeline';
 import JobAnalytics from './components/EmployerDashboard/JobAnalytics';
 import ModerationAuditLog from './components/AdminDashboard/ModerationAuditLog';
+import AdminEmployers from './components/AdminDashboard/AdminEmployers';
+import AdminCandidates from './components/AdminDashboard/AdminCandidates';
+import AdminApplications from './components/AdminDashboard/AdminApplications';
+import StaffActivity from './components/AdminDashboard/StaffActivity';
 
 // --- 1. Admin Route ---
 const AdminRoute = ({ children }) => {
@@ -144,6 +148,17 @@ const AppRoutes = () => {
         {/* Moderation Audit Log (Admin + Staff) */}
         <Route path="/admin/audit-logs" element={<AdminRoute><ModerationAuditLog /></AdminRoute>} />
         <Route path="/staff/audit-logs" element={<StaffRoute><ModerationAuditLog /></StaffRoute>} />
+
+        {/* Admin detail sub-pages (analytics cards-ൽ നിന്ന് navigate ചെയ്യുന്നു) */}
+        <Route path="/admin/employers" element={<AdminRoute><AdminEmployers /></AdminRoute>} />
+        <Route path="/admin/candidates" element={<AdminRoute><AdminCandidates /></AdminRoute>} />
+        <Route path="/admin/applications" element={<AdminRoute><AdminApplications /></AdminRoute>} />
+        <Route path="/admin/staff-activity" element={<AdminRoute><StaffActivity /></AdminRoute>} />
+
+        {/* Staff detail sub-pages (ഇതേ പേജുകൾ Staff-നും ലഭ്യം) */}
+        <Route path="/staff/employers" element={<StaffRoute><AdminEmployers /></StaffRoute>} />
+        <Route path="/staff/candidates" element={<StaffRoute><AdminCandidates /></StaffRoute>} />
+        <Route path="/staff/applications" element={<StaffRoute><AdminApplications /></StaffRoute>} />
 
         <Route path="/admin/categories" element={<AdminRoute><ManageCategories /></AdminRoute>} />
         <Route path="/staff/categories" element={<StaffRoute><ManageCategories /></StaffRoute>} />

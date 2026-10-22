@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PostJobModal from './PostJobModal';
+import { CompanyLogo } from '../Home/categoryVisuals';
 
 const EmployerJobs = () => {
   const navigate = useNavigate();
@@ -86,7 +87,7 @@ const EmployerJobs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 md:pt-32 pb-16 px-6">
+    <div className="min-h-screen bg-slate-50 pt-28 md:pt-32 pb-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
 
         {/* Page Header */}
@@ -141,12 +142,16 @@ const EmployerJobs = () => {
               const cannotActivate = !job.is_active && job.approval_status !== 'Approved';
 
               return (
-              <div key={job.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md hover:border-emerald-100 transition-all flex flex-col">
+              <div key={job.id} className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-[0_20px_50px_-25px_rgba(16,185,129,0.35)] hover:border-emerald-100 transition-all duration-300 flex flex-col">
                 <div className="flex justify-between items-start gap-3 mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-100 text-blue-600 font-black text-lg flex items-center justify-center">
-                      {(job.company_name || 'J').charAt(0).toUpperCase()}
-                    </div>
+                    <CompanyLogo
+                      logoUrl={job.company_logo}
+                      name={job.company_name}
+                      iconName={job.category_icon}
+                      themeIndex={job.category || job.id}
+                      size="sm"
+                    />
                     <div>
                       <h3 className="text-base font-black text-slate-900 leading-tight">{job.title}</h3>
                       <p className="text-xs font-bold text-slate-400 mt-0.5">{job.location}</p>

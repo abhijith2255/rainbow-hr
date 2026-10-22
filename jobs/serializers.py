@@ -16,6 +16,8 @@ class CategorySerializer(serializers.ModelSerializer):
 class JobSerializer(serializers.ModelSerializer):
     # ജോബ് ഡീറ്റെയിൽസ് എടുക്കുമ്പോൾ കാറ്റഗറിയുടെ പേരും കൂടെ കിട്ടാൻ ഇത് സഹായിക്കും
     category_name = serializers.CharField(source='category.name', read_only=True)
+    # ജോബ് കാർഡിൽ ഇൻഡസ്ട്രി ഐക്കൺ കാണിക്കാൻ കാറ്റഗറിയുടെ Lucide icon name
+    category_icon = serializers.SerializerMethodField()
     # ലോഗിൻ ചെയ്ത കാൻഡിഡേറ്റ് ഈ ജോബിന് ഇതിനകം അപേക്ഷിച്ചിട്ടുണ്ടോ എന്ന് അറിയാൻ
     has_applied = serializers.SerializerMethodField()
     # ലോഗിൻ ചെയ്ത കാൻഡിഡേറ്റ് ഈ ജോബ് ബുക്ക്മാർക്ക് ചെയ്തിട്ടുണ്ടോ എന്ന് അറിയാൻ
@@ -23,6 +25,8 @@ class JobSerializer(serializers.ModelSerializer):
     # Job Analytics-ന് വേണ്ടി മൊത്തം വ്യൂ എണ്ണം
     views_count = serializers.SerializerMethodField()
     applications_count = serializers.SerializerMethodField()
+    # ജോബ് കാർഡിൽ കാണിക്കാൻ എംപ്ലോയറുടെ കമ്പനി ലോഗോ
+    company_logo = serializers.SerializerMethodField()
     
     class Meta:
         model = Job
@@ -31,6 +35,10 @@ class JobSerializer(serializers.ModelSerializer):
         # അതുകൊണ്ട് എംപ്ലോയർക്കോ കാൻഡിഡേറ്റിനോ സ്വയം ജോബ് അപ്രൂവ് ചെയ്യാൻ കഴിയില്ല.
         # അപ്രൂവൽ നടക്കേണ്ടത് staff_approve_job_api / toggle_job_active_api വഴി മാത്രമാണ്.
         read_only_fields = ['employer', 'created_at', 'approval_status', 'is_active']
+
+    def get_category_icon(self, obj):
+        # Category ഇല്ലാത്ത ജോബുകൾക്ക് None (frontend generic icon കാണിക്കും)
+        return obj.category.icon if obj.category else None
 
     def get_has_applied(self, obj):
         request = self.context.get('request')
@@ -49,6 +57,20 @@ class JobSerializer(serializers.ModelSerializer):
 
     def get_applications_count(self, obj):
         return obj.applications.count()
+
+    def get_company_logo(self, obj):
+        # EmployerProfile ഇല്ലാത്ത അവസരത്തിലും ലോഗോ അപ്‌ലോഡ് ചെയ്യാത്ത അവസരത്തിലും
+        # crash ആകാതെ None തിരികെ നൽകുന്നു (frontend-ൽ icon fallback കാണിക്കും).
+        profile = getattr(obj.employer, 'employer_profile', None)
+        logo = getattr(profile, 'company_logo', None)
+        if not logo:
+            return None
+        try:
+            url = logo.url
+        except ValueError:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url
 
 
 class SavedJobSerializer(serializers.ModelSerializer):

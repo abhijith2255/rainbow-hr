@@ -22,7 +22,8 @@ def job_list_create_api(request):
         # 0. Home Page-ന് വേണ്ടി: അപ്രൂവ് ചെയ്ത ജോബുകൾ മാത്രം (Employer + Staff പോസ്റ്റ് ചെയ്തത്)
         #    Role പരിഗണിക്കാതെ എപ്പോഴും Approved + Active ജോബുകൾ മാത്രം നൽകുന്നു
         if request.query_params.get('public') == 'true':
-            jobs = Job.objects.filter(approval_status='Approved', is_active=True).order_by('-created_at')
+            # select_related: company_logo-ന് വേണ്ടി employer profile ഒറ്റ query-യിൽ എടുക്കുന്നു
+            jobs = Job.objects.filter(approval_status='Approved', is_active=True).select_related('employer__employer_profile', 'category').order_by('-created_at')
             category_id = request.query_params.get('category')
             if category_id:
                 jobs = jobs.filter(category_id=category_id)
@@ -35,7 +36,7 @@ def job_list_create_api(request):
             if not request.user.is_authenticated:
                 return Response([], status=status.HTTP_200_OK)
             # ലോഗിൻ ചെയ്ത എംപ്ലോയറുടെ ജോബുകൾ മാത്രം ഫിൽട്ടർ ചെയ്യുന്നു
-            jobs = Job.objects.filter(employer=request.user).order_by('-created_at')
+            jobs = Job.objects.filter(employer=request.user).select_related('employer__employer_profile', 'category').order_by('-created_at')
             serializer = JobSerializer(jobs, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -45,10 +46,10 @@ def job_list_create_api(request):
             user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
         if request.user.is_authenticated and (request.user.is_superuser or (user_profile and user_profile.role in ['admin', 'staff'])):
-            jobs = Job.objects.all().order_by('-created_at')
+            jobs = Job.objects.all().select_related('employer__employer_profile', 'category').order_by('-created_at')
         else:
             # പൊതുവായി ഹോം പേജിൽ കാണിക്കുന്ന അപ്രൂവ്ഡ് ജോബുകൾ
-            jobs = Job.objects.filter(approval_status='Approved', is_active=True).order_by('-created_at')
+            jobs = Job.objects.filter(approval_status='Approved', is_active=True).select_related('employer__employer_profile', 'category').order_by('-created_at')
 
         category_id = request.query_params.get('category')
         if category_id:
@@ -116,7 +117,7 @@ def staff_approve_job_api(request, pk):
 @permission_classes([AllowAny])
 def job_detail_api(request, pk):
     try:
-        job = Job.objects.get(pk=pk)
+        job = Job.objects.select_related('employer__employer_profile', 'category').get(pk=pk)
     except Job.DoesNotExist:
         return Response({"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -337,10 +338,21 @@ def staff_all_applications_api(request):
         return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
     status_filter = request.query_params.get('status')
-    applications = JobApplication.objects.all().order_by('-applied_at')
+    applications = JobApplication.objects.select_related('job').all().order_by('-applied_at')
     
     if status_filter:
         applications = applications.filter(status=status_filter)
+
+    # Admin / Staff applications page-ലെ തിരയൽ (അപേക്ഷകന്റെ പേര് / ജോബ് / കമ്പനി)
+    search = request.query_params.get('search')
+    if search:
+        applications = applications.filter(
+            Q(full_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(job__title__icontains=search) |
+            Q(job__company_name__icontains=search) |
+            Q(applicant__username__icontains=search)
+        )
 
     serializer = JobApplicationSerializer(applications, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -493,7 +505,7 @@ def toggle_job_active_api(request, pk):
 @permission_classes([IsAuthenticated])
 def saved_jobs_api(request):
     """ലോഗിൻ ചെയ്ത കാൻഡിഡേറ്റിന്റെ ബുക്ക്മാർക്ക് ചെയ്ത ജോബുകൾ"""
-    saved = SavedJob.objects.filter(user=request.user).select_related('job')
+    saved = SavedJob.objects.filter(user=request.user).select_related('job__employer__employer_profile', 'job__category')
     serializer = SavedJobSerializer(saved, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 

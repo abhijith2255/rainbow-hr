@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import {
+  Plus, PencilLine, Columns3, BarChart3, LogOut, Briefcase, Users,
+  Clock, Eye, ArrowRight, Building2, Globe, User, X, Mail, Phone,
+} from 'lucide-react';
 import PostJobModal from './PostJobModal';
 import { useAuth } from '../../context/AuthContext';
 
@@ -99,16 +103,16 @@ const EmployerDashboard = () => {
   const pendingJobsCount = myJobs.filter(job => job.approval_status === 'Pending').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-6">
+    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-8 rounded-[2rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-6 sm:p-8 rounded-[2rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -z-10 opacity-60 translate-x-1/2 -translate-y-1/2"></div>
           
-          <div className="flex items-center gap-6 z-10 w-full md:w-auto">
+          <div className="flex items-center gap-4 sm:gap-6 z-10 w-full md:w-auto">
             {/* Company Logo / Initial */}
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl shadow-lg overflow-hidden border-4 border-white shrink-0">
+            <div className="w-16 h-16 sm:w-20 md:w-24 sm:h-20 md:h-24 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl sm:text-3xl shadow-lg overflow-hidden border-4 border-white shrink-0">
               {getLogoUrl() ? (
                 <img src={getLogoUrl()} alt="Logo" className="w-full h-full object-cover bg-white" />
               ) : (
@@ -116,16 +120,16 @@ const EmployerDashboard = () => {
               )}
             </div>
             
-            <div className="flex-grow">
+            <div className="flex-grow min-w-0">
               <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 font-black text-[10px] uppercase tracking-widest rounded-full mb-2">
                 Employer Portal
               </span>
-              <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight capitalize">
+              <h1 className="text-xl sm:text-2xl md:text-4xl font-black text-slate-900 tracking-tight capitalize truncate">
                 {data?.companyName || data?.company_name || data?.username || 'Your Company'}
               </h1>
               <p className="text-slate-500 font-bold mt-1 text-sm md:text-base flex items-center gap-2 capitalize">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                {data?.industry || data?.industry_sector || 'Add Industry'} • {data?.location || data?.companyLocation || 'Add Location'}
+                <Building2 className="w-4 h-4 shrink-0" strokeWidth={2.5} />
+                <span className="truncate">{data?.industry || data?.industry_sector || 'Add Industry'} • {data?.location || data?.companyLocation || 'Add Location'}</span>
               </p>
             </div>
           </div>
@@ -134,33 +138,33 @@ const EmployerDashboard = () => {
           <div className="flex flex-wrap gap-3 z-10 w-full md:w-auto mt-2 md:mt-0">
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="flex-1 md:flex-none px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-md hover:bg-emerald-700 shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 min-w-[8.5rem] md:flex-none md:min-w-0 px-5 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-md hover:bg-emerald-700 shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+              <Plus className="w-4 h-4" strokeWidth={3} />
               Post a Job
             </button>
 
             <button 
               onClick={() => navigate('/employer-profile-edit')} 
-              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 min-w-[8.5rem] md:flex-none md:min-w-0 px-5 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              <PencilLine className="w-4 h-4" strokeWidth={2.5} />
               Edit Company
             </button>
 
             <Link
               to="/employer/pipeline"
-              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 min-w-[8.5rem] md:flex-none md:min-w-0 px-5 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2m0 10V7m8 10V7m0 10a2 2 0 01-2 2h-2a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+              <Columns3 className="w-4 h-4" strokeWidth={2.5} />
               ATS Pipeline
             </Link>
 
             <Link
               to="/employer/analytics"
-              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 min-w-[8.5rem] md:flex-none md:min-w-0 px-5 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+              <BarChart3 className="w-4 h-4" strokeWidth={2.5} />
               Job Analytics
             </Link>
 
@@ -170,7 +174,7 @@ const EmployerDashboard = () => {
               className="px-4 py-3 bg-white border border-slate-200 text-red-500 hover:bg-red-50 rounded-xl font-bold shadow-sm transition-all flex items-center justify-center"
               title="Sign Out"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              <LogOut className="w-5 h-5" strokeWidth={2.5} />
             </button>
           </div>
         </header>
@@ -184,9 +188,9 @@ const EmployerDashboard = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                <Briefcase className="w-6 h-6" strokeWidth={2} />
               </div>
-              <svg className="w-5 h-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+              <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" strokeWidth={2.5} />
             </div>
             {/* ഈ യൂസർ പോസ്റ്റ് ചെയ്ത് approved ആയ ജോബുകളുടെ എണ്ണം മാത്രം */}
             <h3 className="text-3xl font-black text-slate-900">{activeJobsCount}</h3>
@@ -201,9 +205,9 @@ const EmployerDashboard = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <Users className="w-6 h-6" strokeWidth={2} />
               </div>
-              <svg className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+              <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" strokeWidth={2.5} />
             </div>
             <h3 className="text-3xl font-black text-slate-900">{applications.length}</h3>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Total Applicants</p>
@@ -214,7 +218,7 @@ const EmployerDashboard = () => {
           <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <Clock className="w-6 h-6" strokeWidth={2} />
               </div>
             </div>
             <h3 className="text-3xl font-black text-slate-900">{pendingJobsCount}</h3>
@@ -229,9 +233,9 @@ const EmployerDashboard = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                <Eye className="w-6 h-6" strokeWidth={2} />
               </div>
-              <svg className="w-5 h-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+              <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" strokeWidth={2.5} />
             </div>
             <h3 className="text-3xl font-black text-slate-900">{totalViews}</h3>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Job Views</p>
@@ -246,8 +250,8 @@ const EmployerDashboard = () => {
           <div className="space-y-8 lg:col-span-2">
 
             {/* Recent Verified Applications (preview only — full list lives on /employer/applications) */}
-            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-              <div className="flex justify-between items-center mb-6 gap-4">
+            <div className="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+              <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
                 <div>
                   <h3 className="text-xl font-black text-slate-900">Recent Applications</h3>
                   <p className="text-xs font-medium text-slate-500 mt-0.5">Latest candidates verified and forwarded by RainbowHR Staff.</p>
@@ -279,8 +283,9 @@ const EmployerDashboard = () => {
                           </span>
                         </div>
                         <h4 className="text-lg font-black text-slate-900">{app.full_name}</h4>
-                        <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                          📧 {app.email} • 📞 {app.phone}
+                        <p className="text-xs font-semibold text-slate-500 mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" strokeWidth={2.5} />{app.email}</span>
+                          <span className="inline-flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" strokeWidth={2.5} />{app.phone}</span>
                         </p>
                       </div>
 
@@ -317,18 +322,18 @@ const EmployerDashboard = () => {
           </div>
 
           {/* Right Column (1 Col): Company Overview */}
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm h-fit">
+          <div className="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-sm h-fit">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-black text-slate-900">Company Overview</h3>
-              <button onClick={() => navigate('/employer-profile-edit')} className="text-blue-600 hover:text-blue-700 bg-blue-50 p-2 rounded-full">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+              <button onClick={() => navigate('/employer-profile-edit')} className="text-blue-600 hover:text-blue-700 bg-blue-50 p-2 rounded-full transition-colors">
+                <PencilLine className="w-4 h-4" strokeWidth={2.5} />
               </button>
             </div>
             
             <div className="space-y-5">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 text-slate-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                  <User className="w-5 h-5" strokeWidth={2} />
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Primary Contact (HR)</p>
@@ -340,7 +345,7 @@ const EmployerDashboard = () => {
               {data?.companyWebsite && (
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 text-slate-400">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                    <Globe className="w-5 h-5" strokeWidth={2} />
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Website</p>
@@ -367,7 +372,7 @@ const EmployerDashboard = () => {
       {/* Candidate Details Modal for Employer */}
       {selectedApp && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-3xl w-full max-w-lg p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-6">
               <div>
                 <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">
@@ -376,8 +381,8 @@ const EmployerDashboard = () => {
                 <h3 className="text-2xl font-black text-slate-900 mt-2">{selectedApp.full_name}</h3>
                 <p className="text-xs font-bold text-slate-400 mt-0.5">Applied on {new Date(selectedApp.applied_at).toLocaleDateString()}</p>
               </div>
-              <button onClick={() => setSelectedApp(null)} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full">
-                ✕
+              <button onClick={() => setSelectedApp(null)} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full shrink-0">
+                <X className="w-4 h-4" strokeWidth={2.5} />
               </button>
             </div>
 
