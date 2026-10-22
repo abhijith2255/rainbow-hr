@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import PostJobModal from './PostJobModal';
+import { useAuth } from '../../context/AuthContext';
 
 const EmployerDashboard = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [myJobs, setMyJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [selectedApp, setSelectedApp] = useState(null);
+  const [totalViews, setTotalViews] = useState(0);
 
   const fetchDashboardData = async () => {
     try {
@@ -49,9 +52,26 @@ const EmployerDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  // Job Views കാർഡിനു വേണ്ടി മാത്രം വേർതിരിച്ചുള്ള analytics ഫെച്ച് (ഇത് fail ആയാലും dashboard തകരില്ല)
+  const fetchTotalViews = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      const res = await axios.get('http://127.0.0.1:8000/api/jobs/employer/analytics/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setTotalViews(res.data?.totals?.total_views ?? 0);
+    } catch (error) {
+      console.error("Total views fetch error:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTotalViews();
+  }, []);
+
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
+    logout();
     navigate('/');
   };
 
@@ -76,9 +96,10 @@ const EmployerDashboard = () => {
 
   // യഥാർത്ഥത്തിൽ അപ്രൂവ് ആയ ആക്ടീവ് ജോബുകളുടെ എണ്ണം മാത്രം ഫിൽട്ടർ ചെയ്യുന്നു
   const activeJobsCount = myJobs.filter(job => job.approval_status === 'Approved').length;
+  const pendingJobsCount = myJobs.filter(job => job.approval_status === 'Pending').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium p-6 md:p-12">
+    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-6">
       <div className="max-w-6xl mx-auto space-y-8">
         
         {/* Header Section */}
@@ -127,6 +148,22 @@ const EmployerDashboard = () => {
               Edit Company
             </button>
 
+            <Link
+              to="/employer/pipeline"
+              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2m0 10V7m8 10V7m0 10a2 2 0 01-2 2h-2a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+              ATS Pipeline
+            </Link>
+
+            <Link
+              to="/employer/analytics"
+              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+              Job Analytics
+            </Link>
+
             {/* Sign Out Button */}
             <button 
               onClick={handleLogout} 
@@ -138,50 +175,86 @@ const EmployerDashboard = () => {
           </div>
         </header>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+        {/* Summary Cards (clickable → dedicated sub-pages) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Active Jobs → /employer/jobs */}
+          <Link
+            to="/employer/jobs"
+            className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all flex flex-col"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+              </div>
+              <svg className="w-5 h-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </div>
             {/* ഈ യൂസർ പോസ്റ്റ് ചെയ്ത് approved ആയ ജോബുകളുടെ എണ്ണം മാത്രം */}
             <h3 className="text-3xl font-black text-slate-900">{activeJobsCount}</h3>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Active Jobs</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            <p className="text-[11px] font-black text-blue-600 mt-3">Manage all jobs →</p>
+          </Link>
+
+          {/* Total Applicants → /employer/applications */}
+          <Link
+            to="/employer/applications"
+            className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg hover:border-emerald-200 hover:-translate-y-1 transition-all flex flex-col"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+              </div>
+              <svg className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </div>
             <h3 className="text-3xl font-black text-slate-900">{applications.length}</h3>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Total Applicants</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <p className="text-[11px] font-black text-emerald-600 mt-3">View applications →</p>
+          </Link>
+
+          {/* Pending Approval (informational) */}
+          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
             </div>
-            <h3 className="text-3xl font-black text-slate-900">0</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Interviews Scheduled</p>
+            <h3 className="text-3xl font-black text-slate-900">{pendingJobsCount}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Pending Approval</p>
+            <p className="text-[11px] font-bold text-slate-400 mt-3">Awaiting staff review</p>
           </div>
+
+          {/* Job Views → /employer/analytics (analytics API-ൽ നിന്നുള്ള total_views) */}
+          <Link
+            to="/employer/analytics"
+            className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-lg hover:border-blue-200 hover:-translate-y-1 transition-all flex flex-col"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+              </div>
+              <svg className="w-5 h-5 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </div>
+            <h3 className="text-3xl font-black text-slate-900">{totalViews}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Job Views</p>
+            <p className="text-[11px] font-black text-indigo-600 mt-3">Views &amp; funnel →</p>
+          </Link>
         </div>
 
         {/* Main Content Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Column (2 Cols): Applications & Jobs */}
+          {/* Left Column (2 Cols): Recent Applications Preview */}
           <div className="space-y-8 lg:col-span-2">
-            
-            {/* 1. Verified Applications from Candidates */}
+
+            {/* Recent Verified Applications (preview only — full list lives on /employer/applications) */}
             <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-6 gap-4">
                 <div>
-                  <h3 className="text-xl font-black text-slate-900">Verified Candidate Applications</h3>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">Reviewed and confirmed by RainbowHR Staff.</p>
+                  <h3 className="text-xl font-black text-slate-900">Recent Applications</h3>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">Latest candidates verified and forwarded by RainbowHR Staff.</p>
                 </div>
-                <span className="px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold text-xs rounded-xl">
-                  {applications.length} Received
-                </span>
+                <Link to="/employer/applications" className="px-3 py-1.5 bg-emerald-50 text-emerald-700 font-extrabold text-xs rounded-xl hover:bg-emerald-100 transition-all whitespace-nowrap">
+                  View All
+                </Link>
               </div>
 
               {applications.length === 0 ? (
@@ -191,7 +264,7 @@ const EmployerDashboard = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {applications.map((app) => (
+                  {applications.slice(0, 3).map((app) => (
                     <div 
                       key={app.id} 
                       className="p-5 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-emerald-200 hover:shadow-md transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
@@ -231,41 +304,12 @@ const EmployerDashboard = () => {
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
 
-            {/* 2. Posted Jobs */}
-            <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-black text-slate-900">Your Posted Jobs</h3>
-                <span className="text-xs font-bold text-slate-400">{myJobs.length} Jobs</span>
-              </div>
-              
-              {myJobs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-                  <p className="font-bold text-sm">No jobs posted yet.</p>
-                  <p className="text-xs mt-1">Click 'Post a Job' to publish your vacancies.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {myJobs.map((job) => (
-                    <div key={job.id} className="p-5 rounded-2xl border border-slate-100 bg-slate-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                      <div>
-                        <h4 className="font-black text-slate-900 text-base">{job.title}</h4>
-                        <p className="text-xs font-semibold text-slate-500 mt-0.5">{job.location} • {job.job_type} • <span className="text-emerald-600 font-bold">{job.salary_range || 'Best in Industry'}</span></p>
-                      </div>
-                      {job.approval_status === 'Pending' ? (
-                        <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-black rounded-full">
-                          Pending Approval
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-black rounded-full">
-                          Active
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                  {applications.length > 3 && (
+                    <Link to="/employer/applications" className="block text-center text-xs font-black text-slate-500 hover:text-emerald-600 pt-2 transition-colors">
+                      + {applications.length - 3} more application{applications.length - 3 > 1 ? 's' : ''} — View all
+                    </Link>
+                  )}
                 </div>
               )}
             </div>

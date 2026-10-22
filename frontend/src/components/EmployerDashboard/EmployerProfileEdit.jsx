@@ -88,7 +88,7 @@ const EmployerProfileEdit = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium py-16 px-4">
+    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100 p-8 md:p-12">
         <div className="flex justify-between items-center mb-8">
           <div>

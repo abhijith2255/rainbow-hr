@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 
 const EmployerApplications = () => {
+  const [searchParams] = useSearchParams();
+  const jobId = searchParams.get('job'); // ഒരു ജോബിന്റെ അപേക്ഷകൾ മാത്രം കാണാൻ
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState(null);
@@ -9,15 +12,20 @@ const EmployerApplications = () => {
 
   useEffect(() => {
     fetchApplications();
-  }, []);
+  }, [jobId]);
 
   const fetchApplications = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/employer/applications/', {
+      // jobId ഉണ്ടെങ്കിൽ ആ ജോബിന്റെ അപേക്ഷകൾ മാത്രം ബാക്കെൻഡിൽ നിന്ന് എടുക്കുന്നു
+      const url = jobId
+        ? `http://127.0.0.1:8000/api/jobs/employer/applications/?job=${jobId}`
+        : 'http://127.0.0.1:8000/api/jobs/employer/applications/';
+      const res = await axios.get(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      setApplications(res.data);
+      setApplications(Array.isArray(res.data) ? res.data : (res.data?.results || []));
     } catch (err) {
       console.error("Failed to load applications", err);
     } finally {
@@ -31,18 +39,43 @@ const EmployerApplications = () => {
     app.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // ഫിൽട്ടർ ചെയ്ത ജോബിന്റെ പേര് ബാനറിൽ കാണിക്കാൻ
+  const filteredJobTitle = jobId && applications.length > 0 ? applications[0].job_title : null;
+
   return (
-    <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-      
-      {/* Header & Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Received Applications</h2>
-          <p className="text-slate-500 font-medium text-xs mt-1">
-            Verified candidate applications forwarded by the HR team.
-          </p>
+    <div className="min-h-screen bg-slate-50 pt-28 md:pt-32 pb-16 px-6">
+      <div className="max-w-6xl mx-auto">
+
+        {/* Page Header */}
+        <div className="mb-8">
+          <Link to="/employer-dashboard" className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-700 uppercase tracking-wider mb-3">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"></path></svg>
+            Back to Dashboard
+          </Link>
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Received Applications</h1>
+          <p className="text-slate-500 font-medium text-sm mt-1">Verified candidate applications forwarded by the RainbowHR team.</p>
         </div>
 
+        {/* Filter Banner (ഒരു ജോബിന് വേണ്ടിയുള്ള അപേക്ഷകൾ മാത്രം) */}
+        {jobId && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-emerald-50 border border-emerald-100 rounded-2xl px-5 py-4">
+            <div className="flex items-center gap-2.5">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.293.707l-3 3A1 1 0 019 22v-8.586L3.293 6.707A1 1 0 013 6V4z"></path></svg>
+              <p className="text-sm font-bold text-emerald-900">
+                Showing applications for{' '}
+                <span className="font-black">{filteredJobTitle || `Job #${jobId}`}</span> only
+              </p>
+            </div>
+            <Link to="/employer/applications" className="text-xs font-black text-emerald-700 hover:text-emerald-900 underline underline-offset-2">
+              Clear filter
+            </Link>
+          </div>
+        )}
+
+        <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+      
+      {/* Search & Count */}
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 mb-8">
         <div className="flex items-center gap-3">
           <input 
             type="text" 
@@ -62,8 +95,12 @@ const EmployerApplications = () => {
         <div className="text-center py-16 font-bold text-slate-400 text-sm">Loading applications...</div>
       ) : filteredApps.length === 0 ? (
         <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-          <p className="text-slate-500 font-bold text-sm">No verified applications received yet.</p>
-          <p className="text-slate-400 font-medium text-xs mt-1">Applications approved by staff will automatically appear here.</p>
+          <p className="text-slate-500 font-bold text-sm">
+            {jobId ? 'No applications received for this job yet.' : 'No verified applications received yet.'}
+          </p>
+          <p className="text-slate-400 font-medium text-xs mt-1">
+            {jobId ? 'Applications for this job will appear here once verified by staff.' : 'Applications approved by staff will automatically appear here.'}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -173,6 +210,8 @@ const EmployerApplications = () => {
         </div>
       )}
 
+        </div>
+      </div>
     </div>
   );
 };

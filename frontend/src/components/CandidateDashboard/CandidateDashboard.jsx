@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import ResumePreview from './ResumePreview';
 
 const CandidateDashboard = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [data, setData] = useState(null);
   const [applications, setApplications] = useState([]);
+  const [savedJobsCount, setSavedJobsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -23,16 +27,21 @@ const CandidateDashboard = () => {
       const token = localStorage.getItem('authToken');
       if (!token) return handleLogout();
 
-      const [dashRes, appsRes] = await Promise.all([
+      const [dashRes, appsRes, savedRes] = await Promise.all([
         axios.get('http://127.0.0.1:8000/api/accounts/candidate/dashboard-data/', {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
         axios.get('http://127.0.0.1:8000/api/jobs/my-applications/', {
           headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        axios.get('http://127.0.0.1:8000/api/jobs/saved-jobs/', {
+          headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
       setData(dashRes.data);
       setApplications(appsRes.data || []);
+      const savedList = Array.isArray(savedRes.data) ? savedRes.data : (savedRes.data?.results || []);
+      setSavedJobsCount(savedList.length);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       if (error.response?.status === 401) {
@@ -44,8 +53,7 @@ const CandidateDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
+    logout();
     navigate('/');
   };
 
@@ -124,7 +132,7 @@ const CandidateDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium p-6 md:p-12">
+    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-6">
       <div className="max-w-6xl mx-auto space-y-10">
         
         {/* Header section with User Data */}
@@ -175,30 +183,23 @@ const CandidateDashboard = () => {
         </header>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <Link to="/candidate/applications" className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center hover:shadow-md hover:-translate-y-1 transition-all">
             <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             </div>
             <h3 className="text-3xl font-black text-slate-900">{applications.length}</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Applied Jobs</p>
-          </div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Applied Jobs <span className="inline-block text-emerald-500 group-hover:translate-x-1 transition-transform">→</span></p>
+          </Link>
           
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
+          <Link to="/candidate/saved-jobs" className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center hover:shadow-md hover:-translate-y-1 transition-all">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
             </div>
-            <h3 className="text-3xl font-black text-slate-900">0</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Saved Jobs</p>
-          </div>
+            <h3 className="text-3xl font-black text-slate-900">{savedJobsCount}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Saved Jobs <span className="inline-block text-emerald-500 group-hover:translate-x-1 transition-transform">→</span></p>
+          </Link>
           
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-center items-center text-center">
-            <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            </div>
-            <h3 className="text-3xl font-black text-slate-900">0</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Interviews</p>
-          </div>
         </div>
 
         {/* Applied Jobs Section */}
@@ -256,6 +257,12 @@ const CandidateDashboard = () => {
                     >
                       View Details
                     </button>
+                    <Link 
+                      to="/candidate/applications"
+                      className="flex-1 md:flex-none px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl transition-all text-center"
+                    >
+                      View Timeline
+                    </Link>
                     <button 
                       onClick={() => handleOpenEdit(app)} 
                       className="flex-1 md:flex-none px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl transition-all"
@@ -312,6 +319,12 @@ const CandidateDashboard = () => {
                     </a>
                   </div>
                 )}
+              </div>
+
+              {/* Application Info-ക്ക് താഴെ റിസ്യൂമിന്റെ ഇൻലൈൻ പ്രിവ്യൂ */}
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">Submitted Resume</h4>
+                <ResumePreview resumeUrl={viewingApp.resume} compact />
               </div>
 
               {viewingApp.cover_letter && (

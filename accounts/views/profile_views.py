@@ -5,6 +5,8 @@ from rest_framework import status
 
 # ഇതേ ആപ്പിലെ (accounts) models.py-ൽ നിന്നും മോഡലുകൾ ഇംപോർട്ട് ചെയ്യുന്നു
 from accounts.models import UserProfile, CandidateProfile, EmployerProfile
+# അപ്ലോഡ് ചെയ്യുന്ന ഫയലുകൾ പരിശോധിക്കാനുള്ള പൊതുവായ validators
+from jobs.validators import validate_resume_file, validate_image_file
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -65,8 +67,7 @@ def get_candidate_dashboard(request):
             "resume": request.build_absolute_uri(candidate.resume.url) if candidate.resume and candidate.resume.name else None,
             
             "applied_jobs": 0, 
-            "saved_jobs": 0,
-            "interviews": 0
+            "saved_jobs": 0
         }
         return Response(data, status=status.HTTP_200_OK)
     except Exception as e:
@@ -93,8 +94,7 @@ def get_employer_dashboard(request):
             "companyWebsite": employer.company_website or '',
             "companyDescription": employer.company_description or '',
             "active_jobs": 0,
-            "total_applicants": 0,
-            "interviews_scheduled": 0
+            "total_applicants": 0
         }
         return Response(data, status=status.HTTP_200_OK)
     except Exception as e:
@@ -165,10 +165,12 @@ def profile_api(request):
             candidate.education = req_data.get('education', candidate.education)
             candidate.portfolio_link = req_data.get('portfolioLink', candidate.portfolio_link)
             
-            # ഫയലുകൾ സേവ് ചെയ്യാൻ
+            # ഫയലുകൾ സേവ് ചെയ്യാൻ (സേവ് ചെയ്യുന്നതിന് മുൻപ് തരം/വലിപ്പം പരിശോധിക്കുന്നു)
             if 'profilePicture' in request.FILES:
+                validate_image_file(request.FILES['profilePicture'], "profile picture")
                 candidate.profile_picture = request.FILES['profilePicture']
             if 'resume' in request.FILES:
+                validate_resume_file(request.FILES['resume'])
                 candidate.resume = request.FILES['resume']
                 
             candidate.save()
@@ -184,8 +186,9 @@ def profile_api(request):
             employer.company_location = req_data.get('companyLocation', employer.company_location)
             employer.company_description = req_data.get('companyDescription', employer.company_description)
             
-            # ലോഗോ സേവ് ചെയ്യാൻ
+            # ലോഗോ സേവ് ചെയ്യാൻ (തരം/വലിപ്പം പരിശോധിച്ചതിന് ശേഷം മാത്രം)
             if 'companyLogo' in request.FILES:
+                validate_image_file(request.FILES['companyLogo'], "company logo")
                 employer.company_logo = request.FILES['companyLogo']
                 
             employer.save()

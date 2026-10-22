@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+
+// Kerala/India job market-ന് പ്രസക്തമായ suggested skills
+const SUGGESTED_SKILLS = [
+  'React', 'Python', 'Django', 'JavaScript', 'SQL', 'Excel',
+  'Tally', 'Communication', 'Customer Service', 'Marketing', 'Accounting', 'Data Entry'
+];
+const MAX_SKILLS = 20;
 
 const CandidateProfileEdit = () => {
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  // Skills tag input-ന്റെ state (array ആയി കൈകാര്യം ചെയ്യുന്നു)
+  const [skillTags, setSkillTags] = useState([]);
+  const [skillInput, setSkillInput] = useState('');
 
   // 1. പുതിയ ഫീൽഡുകൾ കൂടി സ്റ്റേറ്റിൽ ഉൾപ്പെടുത്തി
   const [formData, setFormData] = useState({
@@ -45,6 +58,19 @@ const CandidateProfileEdit = () => {
           education: res.data.education || '',
           portfolioLink: res.data.portfolioLink || ''
         });
+
+        // 3. ബാക്കെൻഡിൽ നിന്നും വരുന്ന skills string-നെ tags array ആക്കി മാറ്റുന്നു (de-duplicate ചെയ്ത്)
+        const parsedSkills = (res.data.skills || '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const uniqueSkills = [];
+        parsedSkills.forEach((s) => {
+          if (!uniqueSkills.some((u) => u.toLowerCase() === s.toLowerCase())) {
+            uniqueSkills.push(s);
+          }
+        });
+        setSkillTags(uniqueSkills.slice(0, MAX_SKILLS));
       } catch (err) {
         setError('Failed to load profile data.');
       } finally {
@@ -57,6 +83,40 @@ const CandidateProfileEdit = () => {
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleFileChange = (e) => setFiles({ ...files, [e.target.name]: e.target.files[0] });
 
+  // ഒരു പുതിയ skill tag ചേർക്കുന്നു (cap, de-duplicate എന്നിവ പരിശോധിക്കുന്നു)
+  const addSkill = (raw) => {
+    const value = (raw || '').trim();
+    if (!value) return;
+    setSkillTags((prev) => {
+      if (prev.length >= MAX_SKILLS) return prev;
+      if (prev.some((s) => s.toLowerCase() === value.toLowerCase())) return prev;
+      return [...prev, value];
+    });
+  };
+
+  // Enter അമർത്തുമ്പോഴോ comma വരുമ്പോഴോ tag ആക്കി മാറ്റുന്നു
+  const handleSkillKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addSkill(skillInput);
+      setSkillInput('');
+    } else if (e.key === 'Backspace' && !skillInput && skillTags.length > 0) {
+      setSkillTags((prev) => prev.slice(0, -1));
+    }
+  };
+
+  const handleSkillChange = (e) => {
+    const val = e.target.value;
+    if (val.includes(',')) {
+      val.split(',').forEach((part) => addSkill(part));
+      setSkillInput('');
+    } else {
+      setSkillInput(val);
+    }
+  };
+
+  const removeSkill = (tag) => setSkillTags((prev) => prev.filter((s) => s !== tag));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -65,6 +125,8 @@ const CandidateProfileEdit = () => {
 
     const submitData = new FormData();
     Object.keys(formData).forEach((key) => submitData.append(key, formData[key]));
+    // skills-നെ comma separated string ആയി വീണ്ടും സെറ്റ് ചെയ്യുന്നു
+    submitData.set('skills', skillTags.join(', '));
     if (files.profilePicture) submitData.append('profilePicture', files.profilePicture);
     if (files.resume) submitData.append('resume', files.resume);
 
@@ -77,6 +139,7 @@ const CandidateProfileEdit = () => {
         }
       });
       setMessage('Profile updated successfully!');
+      refreshProfile(); // Navbar-ലെ പേരും ഫോട്ടോയും ഉടനെ അപ്ഡേറ്റ് ആകാൻ
       setTimeout(() => navigate('/candidate-dashboard'), 1000);
     } catch (err) {
       setError('Failed to update profile. Please try again.');
@@ -88,7 +151,7 @@ const CandidateProfileEdit = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-premium py-16 px-4">
+    <div className="min-h-screen bg-slate-50 font-premium pt-28 md:pt-32 pb-16 px-4">
       <div className="max-w-3xl mx-auto bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100 p-8 md:p-12">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -149,10 +212,57 @@ const CandidateProfileEdit = () => {
             </div>
           </div>
 
-          {/* Extended Info */}
+          {/* Extended Info - Skills & Expertise Tagging */}
           <div>
-            <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Top Skills (Comma Separated)</label>
-            <input type="text" name="skills" value={formData.skills} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none transition-all" placeholder="React, Django, Python, Tailwind" />
+            <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Skills &amp; Expertise</label>
+
+            {/* നിലവിലുള്ള tags കാണിക്കുന്ന ചിപ്പുകൾ */}
+            {skillTags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {skillTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => removeSkill(tag)}
+                      className="text-emerald-500 hover:text-emerald-800 leading-none"
+                      aria-label={`Remove ${tag}`}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <input
+              type="text"
+              value={skillInput}
+              onChange={handleSkillChange}
+              onKeyDown={handleSkillKeyDown}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-bold text-slate-800 focus:bg-white focus:border-emerald-500 outline-none transition-all"
+              placeholder="Type a skill and press Enter or comma..."
+            />
+            <p className="text-[10px] text-slate-400 mt-1 font-medium">
+              {skillTags.length}/{MAX_SKILLS} skills added. Press Enter or comma to add each skill.
+            </p>
+
+            {/* Suggested skills - ക്ലിക്ക് ചെയ്താൽ tag ആയി ചേരുന്നു */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {SUGGESTED_SKILLS.map((skill) => (
+                <button
+                  key={skill}
+                  type="button"
+                  onClick={() => addSkill(skill)}
+                  className="px-3 py-1 rounded-xl text-[11px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-100 transition-all"
+                >
+                  + {skill}
+                </button>
+              ))}
+            </div>
           </div>
           <div>
             <label className="block text-xs font-extrabold text-slate-500 mb-2 uppercase">Portfolio / LinkedIn URL</label>

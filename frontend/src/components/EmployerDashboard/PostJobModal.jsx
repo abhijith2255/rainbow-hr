@@ -1,52 +1,85 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
-  const [formData, setFormData] = useState({
-    title: '',
-    companyName: '',
-    location: '',
-    jobType: 'Full-time',
-    category: '', // പുതുതായി ചേർത്തത്
-    genderPreference: 'Any',
-    salaryType: 'Fixed Range',
-    salaryRange: '',
-    hasIncentives: false,
-    incentiveDetails: '',
-    fresherAllowed: true,
-    experienceRequired: '',
-    ageLimit: '',
-    qualification: '',
-    description: '',
-    requirements: '',
-    accommodation: false,
-    foodProvided: false,
-    healthInsurance: false,
-    providentFund: false,
-    travelAllowance: false,
-    dearnessAllowance: false,
-    leavePolicy: '',
-    additionalBenefits: ''
-  });
+const DEFAULT_FORM = {
+  title: '',
+  companyName: '',
+  location: '',
+  jobType: 'Full-time',
+  category: '',
+  genderPreference: 'Any',
+  salaryType: 'Fixed Range',
+  salaryRange: '',
+  hasIncentives: false,
+  incentiveDetails: '',
+  fresherAllowed: true,
+  experienceRequired: '',
+  ageLimit: '',
+  qualification: '',
+  description: '',
+  requirements: '',
+  accommodation: false,
+  foodProvided: false,
+  healthInsurance: false,
+  providentFund: false,
+  travelAllowance: false,
+  dearnessAllowance: false,
+  leavePolicy: '',
+  additionalBenefits: ''
+};
+
+// എഡിറ്റ് മോഡിൽ ബാക്കെൻഡിൽ നിന്നുള്ള ജോബ് ഡാറ്റ ഫോം ഫീൽഡുകളിലേക്ക് മാറ്റാൻ
+const mapJobToForm = (job) => ({
+  title: job.title || '',
+  companyName: job.company_name || '',
+  location: job.location || '',
+  jobType: job.job_type || 'Full-time',
+  category: job.category || '',
+  genderPreference: job.gender_preference || 'Any',
+  salaryType: job.salary_type || 'Fixed Range',
+  salaryRange: job.salary_range || '',
+  hasIncentives: !!job.has_incentives,
+  incentiveDetails: job.incentive_details || '',
+  fresherAllowed: job.fresher_allowed ?? true,
+  experienceRequired: job.experience_required || '',
+  ageLimit: job.age_limit || '',
+  qualification: job.qualification || '',
+  description: job.description || '',
+  requirements: job.requirements || '',
+  accommodation: !!job.accommodation,
+  foodProvided: !!job.food_provided,
+  healthInsurance: !!job.health_insurance,
+  providentFund: !!job.provident_fund,
+  travelAllowance: !!job.travel_allowance,
+  dearnessAllowance: !!job.dearness_allowance,
+  leavePolicy: job.leave_policy || '',
+  additionalBenefits: job.additional_benefits || ''
+});
+
+const PostJobModal = ({ isOpen, onClose, onJobPosted, portalLabel = 'Employer Portal', jobToEdit = null }) => {
+  const isEditMode = Boolean(jobToEdit);
+
+  const [formData, setFormData] = useState(DEFAULT_FORM);
 
   const [categories, setCategories] = useState([]); // കാറ്റഗറികൾ സ്റ്റോർ ചെയ്യാൻ
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // മോഡൽ ഓപ്പൺ ആകുമ്പോൾ കാറ്റഗറികൾ എടുക്കാൻ
+  // മോഡൽ ഓപ്പൺ ആകുമ്പോൾ കാറ്റഗറികൾ എടുക്കുകയും, എഡിറ്റ് ആണെങ്കിൽ ജോബ് ഡാറ്റ പ്രീഫിൽ ചെയ്യുകയും ചെയ്യുന്നു
   useEffect(() => {
-    if (isOpen) {
-      fetchCategories();
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
+    fetchCategories();
+    setError('');
+    setFormData(jobToEdit ? mapJobToForm(jobToEdit) : DEFAULT_FORM);
+  }, [isOpen, jobToEdit]);
 
   const fetchCategories = async () => {
     try {
       const res = await axios.get('http://127.0.0.1:8000/api/jobs/categories/');
       setCategories(res.data);
-      // ഒന്നാമത്തെ കാറ്റഗറി ഡിഫോൾട്ടായി സെലക്ട് ചെയ്യാൻ
-      if (res.data.length > 0 && !formData.category) {
-        setFormData(prev => ({ ...prev, category: res.data[0].id }));
+      // മുൻപേ ഒരു കാറ്റഗറി സെലക്ട് ചെയ്തിട്ടില്ലെങ്കിൽ മാത്രം ആദ്യത്തേത് ഡിഫോൾട്ടായി വെക്കുന്നു
+      if (res.data.length > 0) {
+        setFormData(prev => (prev.category ? prev : { ...prev, category: res.data[0].id }));
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -97,7 +130,12 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
         additional_benefits: formData.additionalBenefits
       };
 
-      await axios.post('http://127.0.0.1:8000/api/jobs/', payload, {
+      await axios({
+        method: isEditMode ? 'put' : 'post',
+        url: isEditMode
+          ? `http://127.0.0.1:8000/api/jobs/${jobToEdit.id}/`
+          : 'http://127.0.0.1:8000/api/jobs/',
+        data: payload,
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -106,7 +144,9 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
       onClose();     
     } catch (err) {
       setLoading(false);
-      let errorMessage = 'Failed to post job. Please check all fields.';
+      let errorMessage = isEditMode
+        ? 'Failed to update job. Please check all fields.'
+        : 'Failed to post job. Please check all fields.';
       if (err.response && err.response.data) {
           errorMessage = JSON.stringify(err.response.data); 
       }
@@ -120,8 +160,8 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
         
         <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
           <div>
-            <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 font-black text-[10px] uppercase tracking-widest rounded-full mb-1">Employer Portal</span>
-            <h2 className="text-2xl font-black text-slate-900">Post a New Job</h2>
+            <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-700 font-black text-[10px] uppercase tracking-widest rounded-full mb-1">{portalLabel}</span>
+            <h2 className="text-2xl font-black text-slate-900">{isEditMode ? 'Edit Job' : 'Post a New Job'}</h2>
           </div>
           <button onClick={onClose} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -263,7 +303,9 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted }) => {
           {/* Submit */}
           <div className="flex justify-end pt-2">
             <button type="submit" disabled={loading} className="px-8 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/30 tracking-wide">
-              {loading ? 'Posting...' : 'Publish Job Post'}
+              {loading
+                ? (isEditMode ? 'Saving...' : 'Posting...')
+                : (isEditMode ? 'Save Changes' : 'Publish Job Post')}
             </button>
           </div>
 

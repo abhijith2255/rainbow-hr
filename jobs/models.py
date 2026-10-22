@@ -80,6 +80,16 @@ class JobApplication(models.Model):
         ('Rejected', 'Rejected by Staff'),
     )
 
+    # Employer ATS pipeline stages (staff moderation status-ൽ നിന്ന് വ്യത്യസ്തമാണ്)
+    PIPELINE_STAGES = (
+        ('Applied', 'Applied'),
+        ('Under Review', 'Under Review'),
+        ('Shortlisted', 'Shortlisted'),
+        ('Interview', 'Interview'),
+        ('Hired', 'Hired'),
+        ('Rejected', 'Rejected'),
+    )
+
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
     applicant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='job_applications')
     full_name = models.CharField(max_length=200)
@@ -91,8 +101,39 @@ class JobApplication(models.Model):
     # Staff / Admin Verification Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     verified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_applications')
+
+    # Employer ATS stage (employer മാത്രം മാറ്റാവുന്നത്)
+    pipeline_stage = models.CharField(max_length=20, choices=PIPELINE_STAGES, default='Applied')
+    stage_updated_at = models.DateTimeField(auto_now=True)
     
     applied_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.full_name} - {self.job.title} ({self.status})"
+
+
+# Saved / Bookmarked Jobs (Candidate)
+class SavedJob(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saved_jobs')
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='saved_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} saved {self.job}"
+
+
+# Job Views (Job Analytics-ന് വേണ്ടി)
+class JobView(models.Model):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='views')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='job_views')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"View on {self.job} at {self.created_at}"

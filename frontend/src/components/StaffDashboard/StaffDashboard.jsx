@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import PostJobModal from '../EmployerDashboard/PostJobModal';
 import StaffJobApprovals from './StaffJobApprovals';
 import StaffApplicationApprovals from './StaffApplicationApprovals';
+import StaffReceivedApplications from './StaffReceivedApplications';
 import ManageCategories from '../ManageCategories';
+import { useAuth } from '../../context/AuthContext';
 
 const StaffDashboard = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,8 +40,7 @@ const StaffDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
+    logout();
     navigate('/');
   };
 
@@ -99,7 +101,20 @@ const StaffDashboard = () => {
             Job Approvals
           </button>
 
-          {/* 4. Manage Categories */}
+          {/* 4. Received Applications (Staff's own posted jobs) */}
+          <button 
+            onClick={() => setActiveTab('received-applications')}
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold text-sm transition-all ${
+              activeTab === 'received-applications' 
+                ? 'bg-blue-50 text-blue-700 border border-blue-100 shadow-sm' 
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            Received Applications
+          </button>
+
+          {/* 5. Manage Categories */}
           <button 
             onClick={() => setActiveTab('categories')}
             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-extrabold text-sm transition-all ${
@@ -142,6 +157,7 @@ const StaffDashboard = () => {
                     {activeTab === 'workspace' && (dashboardData?.welcome_message || "My Workspace")}
                     {activeTab === 'applications' && "Candidate Applications"}
                     {activeTab === 'job-approvals' && "Employer Job Approvals"}
+                    {activeTab === 'received-applications' && "Received Applications"}
                     {activeTab === 'categories' && "Manage Job Categories"}
                   </h1>
                   <p className="text-slate-500 font-medium text-xs mt-1">
@@ -149,6 +165,14 @@ const StaffDashboard = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
+                  {/* Audit Log page-ilekku pokunna header button */}
+                  <Link 
+                    to="/staff/audit-logs"
+                    className="px-5 py-3 bg-white border border-slate-200 text-slate-700 font-black text-xs rounded-xl shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    Audit Log
+                  </Link>
                   <button 
                     onClick={() => setIsModalOpen(true)}
                     className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
@@ -165,7 +189,40 @@ const StaffDashboard = () => {
               {/* Dynamic View rendering based on activeTab */}
               {activeTab === 'workspace' && (
                 <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Analytics Summary Cards */}
+                  <div>
+                    <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Platform Analytics</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
+                        <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Active Employers</h3>
+                        <p className="text-3xl font-black text-slate-900">{dashboardData?.total_employers || 0}</p>
+                        <span className="text-xs font-bold text-indigo-500 mt-2 block">Hiring companies</span>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
+                        <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Total Job Posts</h3>
+                        <p className="text-3xl font-black text-slate-900">{dashboardData?.total_jobs || 0}</p>
+                        <span className="text-xs font-bold text-emerald-600 mt-2 block">All postings</span>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
+                        <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Total Candidates</h3>
+                        <p className="text-3xl font-black text-slate-900">{dashboardData?.total_candidates || 0}</p>
+                        <span className="text-xs font-bold text-amber-500 mt-2 block">Registered job seekers</span>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden">
+                        <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Total Applications</h3>
+                        <p className="text-3xl font-black text-slate-900">{dashboardData?.total_applications || 0}</p>
+                        <span className="text-xs font-bold text-blue-600 mt-2 block">Received submissions</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div>
+                    <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Quick Actions</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div 
                       onClick={() => setActiveTab('applications')}
                       className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
@@ -185,6 +242,15 @@ const StaffDashboard = () => {
                     </div>
 
                     <div 
+                      onClick={() => setActiveTab('received-applications')}
+                      className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
+                    >
+                      <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">My Posted Jobs</h3>
+                      <p className="text-3xl font-black text-slate-900">Applications</p>
+                      <span className="text-xs font-bold text-emerald-600 mt-2 block">View received applications →</span>
+                    </div>
+
+                    <div 
                       onClick={() => setActiveTab('categories')}
                       className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
                     >
@@ -192,12 +258,24 @@ const StaffDashboard = () => {
                       <p className="text-3xl font-black text-slate-900">Configure</p>
                       <span className="text-xs font-bold text-slate-500 mt-2 block">Add or edit categories →</span>
                     </div>
+
+                    {/* Audit Log page-ilekku pokunna quick action card */}
+                    <Link 
+                      to="/staff/audit-logs"
+                      className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm cursor-pointer hover:-translate-y-1 hover:shadow-md transition-all"
+                    >
+                      <h3 className="text-slate-400 font-black text-xs uppercase tracking-wider mb-2">Moderation Audit Log</h3>
+                      <p className="text-3xl font-black text-slate-900">History</p>
+                      <span className="text-xs font-bold text-blue-600 mt-2 block">Browse all moderation actions →</span>
+                    </Link>
+                    </div>
                   </div>
                 </div>
               )}
 
               {activeTab === 'applications' && <StaffApplicationApprovals />}
               {activeTab === 'job-approvals' && <StaffJobApprovals />}
+              {activeTab === 'received-applications' && <StaffReceivedApplications />}
               {activeTab === 'categories' && <ManageCategories />}
             </>
           )}
@@ -210,6 +288,7 @@ const StaffDashboard = () => {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onJobPosted={fetchStaffData} 
+        portalLabel="Staff Portal"
       />
     </div>
   );

@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // 1. useLocation add cheythu
-import axios from 'axios';
-import Login from '../pages/login'; 
+import { Link, useNavigate } from 'react-router-dom';
+import Login from '../pages/login';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // 2. Location hook initialize cheythu
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // User States
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState(null);
-  const [userName, setUserName] = useState('');
-  const [profilePic, setProfilePic] = useState(null);
+  // Shared auth state - updates instantly on login / logout anywhere in the app.
+  const {
+    isLoggedIn,
+    userRole,
+    userName,
+    profilePic,
+    logout,
+    dashboardLink,
+    profileEditLink,
+  } = useAuth();
 
   // Scroll effect
   useEffect(() => {
@@ -25,84 +29,19 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
- useEffect(() => {
-    const checkLoginStatus = async () => {
-      const token = localStorage.getItem('authToken');
-      const role = localStorage.getItem('userRole');
-
-      if (token && role) {
-        setIsLoggedIn(true);
-        setUserRole(role);
-        
-        try {
-          // 1. accounts path correct aayi kodukkuka
-          const res = await axios.get('http://127.0.0.1:8000/api/accounts/profile/', { 
-            headers: { 'Authorization': `Bearer ${token}` } 
-          });
-          
-          // 2. snake_case & camelCase randum support cheyyunna reethi
-          const name = res.data.full_name || res.data.fullName || res.data.company_name || res.data.companyName || res.data.username || 'User';
-          setUserName(name);
-          
-          const pic = res.data.profile_picture || res.data.profilePicture || res.data.company_logo || res.data.companyLogo;
-          if (pic) {
-            setProfilePic(pic.startsWith('http') ? pic : `http://127.0.0.1:8000${pic}`);
-          }
-          
-        } catch (err) {
-          console.error("Failed to fetch user data", err);
-          // Backend URL /api/accounts/user-profile/ aayirikkaan saadhyathayund:
-          if (err.response?.status === 404) {
-            tryFallbackProfileUrl(token);
-          }
-        }
-      } else {
-        setIsLoggedIn(false);
-        setUserRole(null);
-      }
-    };
-
-    // Fallback: Oruvela /api/accounts/user-profile/ aaanengil athil ninnu edukkunnu
-    const tryFallbackProfileUrl = async (token) => {
-      try {
-        const res = await axios.get('http://127.0.0.1:8000/api/accounts/user-profile/', { 
-          headers: { 'Authorization': `Bearer ${token}` } 
-        });
-        const name = res.data.full_name || res.data.fullName || res.data.company_name || res.data.companyName || res.data.username || 'User';
-        setUserName(name);
-        const pic = res.data.profile_picture || res.data.profilePicture || res.data.company_logo || res.data.companyLogo;
-        if (pic) {
-          setProfilePic(pic.startsWith('http') ? pic : `http://127.0.0.1:8000${pic}`);
-        }
-      } catch (e) {
-        console.error("Fallback profile fetch failed too", e);
-      }
-    };
-
-    checkLoginStatus();
-  }, [isLoginModalOpen, location]); // <-- 3. [location] koodi dependency-il add cheythu
-
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
-    setIsLoggedIn(false);
-    setUserRole(null);
-    setUserName('');
-    setProfilePic(null);
+    logout();
     setIsDropdownOpen(false);
     navigate('/');
   };
 
-  const getDashboardLink = () => {
-    if (userRole === 'admin') return '/admin-dashboard';
-    if (userRole === 'staff') return '/staff-dashboard';
-    if (userRole === 'employer') return '/employer-dashboard';
-    return '/candidate-dashboard';
-  };
-
-  const getProfileEditLink = () => {
-    if (userRole === 'employer') return '/employer-profile-edit';
-    return '/candidate-profile-edit';
+  // "Post a Job" ബട്ടൺ ക്ലിക്ക് - ലോഗിൻ ചെയ്ത എംപ്ലോയർക്ക് ജോബ് പോസ്റ്റിംഗ് പേജിലേക്ക്
+  const handlePostJobClick = () => {
+    if (isLoggedIn) {
+      navigate(userRole === 'employer' ? '/employer/jobs' : dashboardLink);
+    } else {
+      setIsLoginModalOpen(true);
+    }
   };
 
   return (
@@ -119,10 +58,10 @@ const Navbar = () => {
           </div>
           
           <div className="hidden lg:flex space-x-8 text-sm font-bold text-slate-300">
-            <Link to="/" className="hover:text-emerald-400 transition-colors">Find Jobs</Link>
-            <Link to="/" className="hover:text-emerald-400 transition-colors">Top Companies</Link>
-            <Link to="/" className="hover:text-emerald-400 transition-colors">For Employers</Link>
-            <Link to="/" className="hover:text-emerald-400 transition-colors">Contact</Link>
+            <Link to="/jobs" className="hover:text-emerald-400 transition-colors">Find Jobs</Link>
+            <Link to="/#companies" className="hover:text-emerald-400 transition-colors">Top Companies</Link>
+            <Link to="/#for-employers" className="hover:text-emerald-400 transition-colors">For Employers</Link>
+            <Link to="/#contact" className="hover:text-emerald-400 transition-colors">Contact</Link>
           </div>
 
           <div className="hidden lg:flex space-x-5 items-center relative">
@@ -131,7 +70,7 @@ const Navbar = () => {
                 <button onClick={() => setIsLoginModalOpen(true)} className="text-slate-300 text-sm font-bold hover:text-white transition-colors cursor-pointer">
                   Sign In
                 </button>
-                <button className="bg-emerald-500 text-slate-950 px-6 py-2.5 rounded-xl text-sm font-extrabold shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:bg-emerald-400 transition-all cursor-pointer">
+                <button className="bg-emerald-500 text-slate-950 px-6 py-2.5 rounded-xl text-sm font-extrabold shadow-[0_4px_15px_rgba(16,185,129,0.3)] hover:bg-emerald-400 transition-all cursor-pointer" onClick={handlePostJobClick}>
                   Post a Job
                 </button>
               </>
@@ -164,7 +103,7 @@ const Navbar = () => {
                     
                     <div className="p-2 space-y-1">
                       <Link 
-                        to={getProfileEditLink()}
+                        to={profileEditLink}
                         onClick={() => setIsDropdownOpen(false)}
                         className="flex items-center gap-3 px-3 py-2.5 text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 font-bold text-sm rounded-xl transition-colors"
                       >
@@ -173,7 +112,7 @@ const Navbar = () => {
                       </Link>
 
                       <Link 
-                        to={getDashboardLink()}
+                        to={dashboardLink}
                         onClick={() => setIsDropdownOpen(false)}
                         className="flex items-center gap-3 px-3 py-2.5 text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 font-bold text-sm rounded-xl transition-colors"
                       >
@@ -206,16 +145,16 @@ const Navbar = () => {
 
         {isOpen && (
           <div className="lg:hidden mt-3 bg-slate-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col space-y-4 text-center">
-            <Link to="/" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">Find Jobs</Link>
-            <Link to="/" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">Top Companies</Link>
-            <Link to="/" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">For Employers</Link>
-            <Link to="/" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">Contact</Link>
+            <Link to="/jobs" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">Find Jobs</Link>
+            <Link to="/#companies" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">Top Companies</Link>
+            <Link to="/#for-employers" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">For Employers</Link>
+            <Link to="/#contact" onClick={() => setIsOpen(false)} className="text-slate-300 font-bold hover:text-emerald-400">Contact</Link>
             <hr className="border-white/10 my-1"/>
             
             {!isLoggedIn ? (
               <>
                 <button onClick={() => { setIsOpen(false); setIsLoginModalOpen(true); }} className="text-white font-bold py-2 cursor-pointer">Sign In</button>
-                <button className="bg-emerald-500 text-slate-950 py-3 rounded-xl font-extrabold shadow-lg cursor-pointer">Post a Job</button>
+                <button onClick={() => { setIsOpen(false); handlePostJobClick(); }} className="bg-emerald-500 text-slate-950 py-3 rounded-xl font-extrabold shadow-lg cursor-pointer">Post a Job</button>
               </>
             ) : (
               <>
@@ -226,10 +165,10 @@ const Navbar = () => {
                      <p className="text-emerald-400 text-[10px] font-black uppercase tracking-wider mt-1">{userRole}</p>
                    </div>
                 </div>
-                <Link to={getProfileEditLink()} onClick={() => setIsOpen(false)} className="bg-white/5 text-white py-3 rounded-xl font-bold border border-white/10 block">
+                <Link to={profileEditLink} onClick={() => setIsOpen(false)} className="bg-white/5 text-white py-3 rounded-xl font-bold border border-white/10 block">
                   My Profile
                 </Link>
-                <Link to={getDashboardLink()} onClick={() => setIsOpen(false)} className="bg-white/10 text-white py-3 rounded-xl font-bold border border-white/10 block">
+                <Link to={dashboardLink} onClick={() => setIsOpen(false)} className="bg-white/10 text-white py-3 rounded-xl font-bold border border-white/10 block">
                   Go to Dashboard
                 </Link>
                 <button onClick={handleLogout} className="bg-red-500/10 text-red-500 py-3 rounded-xl font-bold border border-red-500/20 w-full">
@@ -241,7 +180,20 @@ const Navbar = () => {
         )}
       </nav>
 
-      <Login isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLoginSuccess={() => window.location.reload()} />
+      <Login 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onLoginSuccess={() => {
+          setIsLoginModalOpen(false);
+          // ലോഗിൻ ചെയ്ത റോൾ അനുസരിച്ച് ശരിയായ ഡാഷ്ബോർഡിലേക്ക് മാറ്റുന്നു
+          const role = localStorage.getItem('userRole');
+          if (role === 'employer') navigate('/employer-dashboard');
+          else if (role === 'candidate') navigate('/candidate-dashboard');
+          else if (role === 'staff') navigate('/staff-dashboard');
+          else if (role === 'admin') navigate('/admin-dashboard');
+          else navigate('/');
+        }} 
+      />
     </>
   );
 };

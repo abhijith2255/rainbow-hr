@@ -28,7 +28,7 @@ const AllCategories = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 py-16 px-6">
+    <div className="min-h-screen bg-slate-50 pt-28 md:pt-32 pb-16 px-6">
       <div className="max-w-7xl mx-auto">
         
         {/* Header & Search */}

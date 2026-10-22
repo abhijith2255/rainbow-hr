@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/home';
 import Footer from './components/Home/Footer';
 import AllCategories from './components/Home/AllCategories';
 import CategoryJobs from './components/Home/CategoryJobs';
+import AllJobs from './components/Home/AllJobs';
+import JobDetails from './components/Home/JobDetails';
+import { AuthProvider } from './context/AuthContext';
 
 // --- Dashboard Imports ---
 import AdminDashboard from './components/AdminDashboard/AdminDashboard'; 
@@ -16,8 +19,15 @@ import ManageCategories from './components/ManageCategories';   // പുതി�
 import StaffDashboard from './components/StaffDashboard/StaffDashboard';
 import CandidateDashboard from './components/CandidateDashboard/CandidateDashboard'; 
 import EmployerDashboard from './components/EmployerDashboard/EmployerDashboard'; 
+import EmployerJobs from './components/EmployerDashboard/EmployerJobs';
+import EmployerApplications from './components/EmployerDashboard/EmployerApplications';
 import CandidateProfileEdit from './components/CandidateDashboard/CandidateProfileEdit';
+import SavedJobs from './components/CandidateDashboard/SavedJobs';
+import ApplicationTimeline from './components/CandidateDashboard/ApplicationTimeline';
 import EmployerProfileEdit from './components/EmployerDashboard/EmployerProfileEdit';
+import ATSPipeline from './components/EmployerDashboard/ATSPipeline';
+import JobAnalytics from './components/EmployerDashboard/JobAnalytics';
+import ModerationAuditLog from './components/AdminDashboard/ModerationAuditLog';
 
 // --- 1. Admin Route ---
 const AdminRoute = ({ children }) => {
@@ -55,13 +65,11 @@ const EmployerRoute = ({ children }) => {
 const AppRoutes = () => {
   const location = useLocation();
   
-  // Dashboard, Admin sub-pages, profile edit പേജുകളിൽ മെയിൻ Navbar ഹൈഡ് ചെയ്യുന്നു
-const hideNavbar = 
-    location.pathname.includes('dashboard') || 
+  // Admin / Staff ഡാഷ്ബോർഡുകൾക്ക് മാത്രം മെയിൻ Navbar/Footer ഹൈഡ് ചെയ്യുന്നു.
+  // Employer, Candidate ഡാഷ്ബോർഡുകളിലും Profile പേജുകളിലും Navbar + Footer കാണിക്കുന്നു.
+  const hideNavbar = 
     location.pathname.startsWith('/admin') ||
-    location.pathname.startsWith('/staff') ||
-    location.pathname.startsWith('/employer') ||
-    location.pathname.includes('profile-edit');
+    location.pathname.startsWith('/staff');
   return (
     <>
       {!hideNavbar && <Navbar />}
@@ -95,6 +103,15 @@ const hideNavbar =
           path="/employer-dashboard" 
           element={ <EmployerRoute><EmployerDashboard /></EmployerRoute> } 
         />
+        {/* Employer dedicated sub-pages */}
+        <Route 
+          path="/employer/jobs" 
+          element={ <EmployerRoute><EmployerJobs /></EmployerRoute> } 
+        />
+        <Route 
+          path="/employer/applications" 
+          element={ <EmployerRoute><EmployerApplications /></EmployerRoute> } 
+        />
         <Route 
           path="/candidate-profile-edit"
           element={ <CandidateRoute><CandidateProfileEdit /></CandidateRoute> } 
@@ -103,6 +120,31 @@ const hideNavbar =
           path="/employer-profile-edit" 
           element={ <EmployerRoute><EmployerProfileEdit /></EmployerRoute> } 
         />
+
+        {/* Employer: ATS Pipeline & Job Analytics (dedicated sub-pages) */}
+        <Route 
+          path="/employer/pipeline" 
+          element={ <EmployerRoute><ATSPipeline /></EmployerRoute> } 
+        />
+        <Route 
+          path="/employer/analytics" 
+          element={ <EmployerRoute><JobAnalytics /></EmployerRoute> } 
+        />
+
+        {/* Candidate: Saved Jobs & Application Timeline (dedicated sub-pages) */}
+        <Route 
+          path="/candidate/saved-jobs" 
+          element={ <CandidateRoute><SavedJobs /></CandidateRoute> } 
+        />
+        <Route 
+          path="/candidate/applications" 
+          element={ <CandidateRoute><ApplicationTimeline /></CandidateRoute> } 
+        />
+
+        {/* Moderation Audit Log (Admin + Staff) */}
+        <Route path="/admin/audit-logs" element={<AdminRoute><ModerationAuditLog /></AdminRoute>} />
+        <Route path="/staff/audit-logs" element={<StaffRoute><ModerationAuditLog /></StaffRoute>} />
+
         <Route path="/admin/categories" element={<AdminRoute><ManageCategories /></AdminRoute>} />
         <Route path="/staff/categories" element={<StaffRoute><ManageCategories /></StaffRoute>} />
         <Route 
@@ -110,38 +152,24 @@ const hideNavbar =
   element={ <StaffRoute><StaffJobApprovals /></StaffRoute> } 
 />
 <Route path="/categories" element={<AllCategories />} />
-<Route path="/categories/:categoryId/jobs" element={<CategoryJobs />} />
+        <Route path="/categories/:categoryId/jobs" element={<CategoryJobs />} />
+        {/* എല്ലാ ജോബുകളും + ഒരു ജോബിന്റെ വിശദാംശങ്ങൾ */}
+        <Route path="/jobs" element={<AllJobs />} />
+        <Route path="/jobs/:jobId" element={<JobDetails />} />
       </Routes>
+
+      {/* Navbar ഉള്ള എല്ലാ പേജുകളിലും Footer-ഉം സ്ഥിരമായി കാണിക്കുന്നു */}
+      {!hideNavbar && <Footer />}
     </>
   );
 };
 
 // --- 6. Main App Component ---
 function App() {
-  const [isPreloading, setIsPreloading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPreloading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isPreloading) {
-    return (
-      <div className="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-[200]">
-        <div className="w-16 h-16 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin"></div>
-        <h2 className="mt-4 text-white font-extrabold text-xl tracking-widest animate-pulse">
-          Rainbow<span className="text-emerald-500">HR.</span>
-        </h2>
-      </div>
-    );
-  }
-
   return (
     <Router>
-      <div className="font-premium">
+      <AuthProvider>
+        <div className="font-premium">
         
         {/* Global Styles and Animations */}
         <style>{`
@@ -168,6 +196,7 @@ function App() {
 
         <AppRoutes />
       </div>
+      </AuthProvider>
     </Router>
   );
 }

@@ -1,6 +1,15 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Footer = () => {
+  const { isLoggedIn, dashboardLink, userRole } = useAuth();
+
+  // ലോഗിൻ ചെയ്തിട്ടില്ലെങ്കിൽ ജോബ് ലിസ്റ്റിംഗിലേക്ക് പോകുന്നു
+  const footerDashboardLink = isLoggedIn ? dashboardLink : '/jobs';
+  // എംപ്ലോയർക്ക് ജോബ് പോസ്റ്റിംഗ് പേജ്, മറ്റുള്ളവർക്ക് ജോബ് ലിസ്റ്റിംഗ്
+  const postJobLink = isLoggedIn && userRole === 'employer' ? '/employer/jobs' : '/jobs';
+
   return (
     <footer className="bg-slate-950 border-t border-slate-900 pt-20 pb-10 relative z-10 overflow-hidden">
       {/* Subtle Background Glow Effect */}
@@ -31,10 +40,10 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-2 md:col-start-6">
             <h4 className="font-black text-white mb-6 uppercase tracking-wider text-xs">Candidates</h4>
             <ul className="space-y-4 text-sm font-semibold text-slate-400">
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Browse Jobs</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Categories</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Submit Resume</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Dashboard</a></li>
+              <li><Link to="/jobs" className="hover:text-emerald-400 transition-colors">Browse Jobs</Link></li>
+              <li><Link to="/categories" className="hover:text-emerald-400 transition-colors">Categories</Link></li>
+              <li><Link to="/jobs" className="hover:text-emerald-400 transition-colors">Submit Resume</Link></li>
+              <li><Link to={footerDashboardLink} className="hover:text-emerald-400 transition-colors">Dashboard</Link></li>
             </ul>
           </div>
 
@@ -42,15 +51,15 @@ const Footer = () => {
           <div className="col-span-1 md:col-span-2">
             <h4 className="font-black text-white mb-6 uppercase tracking-wider text-xs">Employers</h4>
             <ul className="space-y-4 text-sm font-semibold text-slate-400">
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Post a Job</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Find Talent</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Pricing Plans</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Dashboard</a></li>
+              <li><Link to={postJobLink} className="hover:text-emerald-400 transition-colors">Post a Job</Link></li>
+              <li><Link to="/jobs" className="hover:text-emerald-400 transition-colors">Find Talent</Link></li>
+              <li><Link to="/#for-employers" className="hover:text-emerald-400 transition-colors">Pricing Plans</Link></li>
+              <li><Link to={footerDashboardLink} className="hover:text-emerald-400 transition-colors">Dashboard</Link></li>
             </ul>
           </div>
 
           {/* Contact - മൊബൈലിൽ ഫുൾ വീതി (col-span-2) */}
-          <div className="col-span-2 md:col-span-4 lg:col-span-3 lg:col-start-10">
+          <div id="contact" className="col-span-2 md:col-span-4 lg:col-span-3 lg:col-start-10 scroll-mt-28">
             <h4 className="font-black text-white mb-6 uppercase tracking-wider text-xs">Contact Us</h4>
             <ul className="space-y-4 text-sm font-semibold text-slate-400">
               <li className="flex items-start gap-3">
@@ -59,7 +68,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3">
                 <svg className="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                support@rainbowhr.com
+                <a href="mailto:support@rainbowhr.com" className="hover:text-emerald-400 transition-colors">support@rainbowhr.com</a>
               </li>
             </ul>
           </div>
@@ -70,8 +79,8 @@ const Footer = () => {
         <div className="border-t border-slate-800/60 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs font-bold text-slate-500">© 2026 RainbowHR. All rights reserved.</p>
           <div className="flex gap-6 text-xs font-bold text-slate-500">
-            <a href="#" className="hover:text-emerald-400 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-emerald-400 transition-colors">Terms of Service</a>
+            <Link to="/" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
+            <Link to="/" className="hover:text-emerald-400 transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

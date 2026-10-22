@@ -1,6 +1,8 @@
 
 
 from pathlib import Path
+from datetime import timedelta
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -10,12 +12,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-c32jf%7!!^*p)=5u2700p@a10vu0f@huijgze^a%m^t%)nojq_'
+# .env ഫയലിൽ നിന്നാണ് ഇത് വായിക്കുന്നത് (സോഴ്സ് കോഡിൽ ഹാർഡ്‌കോഡ് ചെയ്യരുത്)
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# ഡിഫോൾട്ട് False ആണ് - .env-ൽ DEBUG=True എന്ന് നൽകിയാൽ മാത്രം ഡെവലപ്പ്മെന്റിൽ ഓൺ ആകും
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
 
 
 # Application definition
@@ -127,23 +131,21 @@ AUTHENTICATION_BACKENDS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    # സുരക്ഷിതമായ ഡിഫോൾട്ട്: എല്ലാ എൻഡ്‌പോയിന്റിനും ലോഗിൻ നിർബന്ധം.
+    # പബ്ലിക് എൻഡ്‌പോയിന്റുകളിൽ മാത്രം @permission_classes([AllowAny]) ഉപയോഗിക്കുന്നു.
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-]
-
-# REST Framework Settings
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
-}
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default='http://localhost:5173',
+    cast=Csv()
+)
 
 # JWT Token Settings (ടോക്കൺ കാലാവധി)
-from datetime import timedelta
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), # ഒരു ദിവസത്തേക്ക് ലോഗിൻ നിൽക്കും
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),

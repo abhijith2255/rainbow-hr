@@ -50,6 +50,42 @@ class CandidateProfile(models.Model):
     def __str__(self):
         return f"Candidate: {self.full_name or self.user.username}"
 
+# 3.5 Moderation Audit Log
+# Staff / Admin നടത്തുന്ന എല്ലാ പ്രധാന നടപടികളും ഇവിടെ രേഖപ്പെടുത്തുന്നു.
+class AuditLog(models.Model):
+    ACTION_CHOICES = (
+        ('job_approve', 'Job Approved'),
+        ('job_update', 'Job Updated'),
+        ('job_delete', 'Job Deleted'),
+        ('job_activate', 'Job Activated'),
+        ('job_deactivate', 'Job Deactivated'),
+        ('application_approve', 'Application Approved'),
+        ('application_reject', 'Application Rejected'),
+        ('employer_verify', 'Employer Verified'),
+        ('category_create', 'Category Created'),
+        ('category_update', 'Category Updated'),
+        ('category_delete', 'Category Deleted'),
+        ('staff_create', 'Staff Account Created'),
+    )
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='audit_logs'
+    )
+    action = models.CharField(max_length=40, choices=ACTION_CHOICES)
+    target_type = models.CharField(max_length=40, blank=True, null=True)
+    target_id = models.IntegerField(blank=True, null=True)
+    target_label = models.CharField(max_length=255, blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.actor} - {self.action}"
+
+
 # 4. Employer Model
 class EmployerProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='employer_profile')

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   const [username, setUsername] = useState('');
@@ -20,6 +21,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   const [employerData, setEmployerData] = useState({ companyName: '', hrName: '', industry: '' });
 
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   // 3D Flip Animation Control
   useEffect(() => {
@@ -38,20 +40,19 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
 
   // ലോഗിൻ സക്സസ് ആകുമ്പോൾ പേജ് റീഫ്രഷ് ചെയ്യാതെ തന്നെ നാബ്‌ബാർ അപ്ഡേറ്റ് ആകാൻ സഹായിക്കുന്നു
 const handleAuthSuccess = (token, role) => {
-    localStorage.setItem('authToken', token);
-    
+    login(token, role); // Context + localStorage randum update aakunnu
+
     if (!role || role === 'unassigned') {
       setView('role-selection'); 
     } else {
-      localStorage.setItem('userRole', role);
       onClose(); // Modal close cheyyunnu
-      
+
       if (role === 'admin') {
         navigate('/admin-dashboard');
       } else if (role === 'staff') {
         navigate('/staff-dashboard');
       } else {
-        // Candidate login aayal callback execute aavum
+        // Candidate / Employer login aayal callback execute aavum
         if (onLoginSuccess) onLoginSuccess(); 
       }
     }
@@ -86,7 +87,7 @@ const handleAuthSuccess = (token, role) => {
         profile_data: selectedRole === 'candidate' ? candidateData : employerData
       };
       const response = await axios.post('http://127.0.0.1:8000/api/accounts/set-role/', payload, { headers: { 'Authorization': `Bearer ${token}` } });
-      localStorage.setItem('userRole', response.data.role);
+      login(token, response.data.role);
       onClose();
       if (onLoginSuccess) onLoginSuccess(); // പേജ് റീഫ്രഷ് ചെയ്യാതെ അപ്ഡേറ്റ് ചെയ്യുന്നു
     } catch (err) {

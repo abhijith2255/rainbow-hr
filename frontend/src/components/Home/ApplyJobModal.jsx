@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const ApplyJobModal = ({ isOpen, onClose, job }) => {
+const ApplyJobModal = ({ isOpen, onClose, job, onApplied }) => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -62,6 +62,7 @@ const ApplyJobModal = ({ isOpen, onClose, job }) => {
       });
 
       alert("Application submitted successfully!");
+      if (onApplied) onApplied();
       onClose();
     } catch (err) {
       setError(err.response?.data?.error || "Failed to submit application. Please try again.");
