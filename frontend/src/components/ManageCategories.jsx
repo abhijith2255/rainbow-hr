@@ -164,8 +164,8 @@ const ManageCategories = ({ embedded = false }) => {
 
   // Edit Modal (ethu mode-ilum reuse cheyyunnu)
   const editModal = editCategory && (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4 sm:p-0">
+      <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-black text-slate-900">Edit Category</h2>
           <button onClick={() => setEditCategory(null)} aria-label="Close" className="p-2 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">

@@ -125,10 +125,10 @@ const AdminStaffs = () => {
 
       {/* Create Staff Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0">
+          <div className="bg-white rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
 
-            <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+            <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
               <div>
                 <h2 className="text-xl font-black text-slate-900">Create Staff Account</h2>
                 <p className="text-xs font-bold text-slate-500 mt-0.5">New team member will get staff portal access.</p>
@@ -138,7 +138,7 @@ const AdminStaffs = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateStaff} className="p-6 space-y-4">
+            <form onSubmit={handleCreateStaff} className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Username</label>
                 <input type="text" name="username" required value={newStaff.username} onChange={handleInputChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 font-bold" placeholder="e.g. jsmith" />

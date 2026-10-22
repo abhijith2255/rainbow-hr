@@ -72,8 +72,9 @@ const ApplyJobModal = ({ isOpen, onClose, job, onApplied }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-premium">
-      <div className="bg-white rounded-3xl w-full max-w-lg p-8 shadow-2xl border border-slate-100">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-0 font-premium">
+      {/* max-h + overflow-y-auto - form valuthaayalum modal-inakathu scroll cheyyam, cut off aavilla */}
+      <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-slate-100">
         
         {/* Modal Header */}
         <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">

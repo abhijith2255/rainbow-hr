@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # 1. Category Model
 class Category(models.Model):
@@ -137,3 +138,27 @@ class JobView(models.Model):
 
     def __str__(self):
         return f"View on {self.job} at {self.created_at}"
+
+
+# Platform Reviews & Testimonials (Homepage / All Reviews page)
+# Logged-in candidates / employers nalkunna rating-um feedback-um ivide save cheyyunnu.
+class Review(models.Model):
+    ROLE_CHOICES = (
+        ('candidate', 'Candidate'),
+        ('employer', 'Employer'),
+    )
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate')
+    # 1 - 5 stars mathram allow cheyyunnu (validator vazhi database level-il thanne)
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} - {self.rating}★"

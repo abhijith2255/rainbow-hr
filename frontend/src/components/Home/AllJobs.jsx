@@ -1,20 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { CompanyLogo } from './categoryVisuals';
+import { Search, MapPin } from 'lucide-react';
 
 // എല്ലാ അപ്രൂവ്ഡ് ജോബുകളും കാണിക്കുന്ന പ്രത്യേക പേജ്
 const AllJobs = () => {
   const navigate = useNavigate();
+  // Hero search bar-il ninnum varunna ?q= & ?location= params ivide vayikkunnu
+  const [searchParams] = useSearchParams();
   const [jobs, setJobs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  const [locationTerm, setLocationTerm] = useState(searchParams.get('location') || '');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Hero-il ninnum veendum search cheyyumbol URL param maarunnathine sync cheyyunnu
+  useEffect(() => {
+    setSearchTerm(searchParams.get('q') || '');
+    setLocationTerm(searchParams.get('location') || '');
+  }, [searchParams]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -37,10 +47,10 @@ const AllJobs = () => {
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
       job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location?.toLowerCase().includes(searchTerm.toLowerCase());
+      job.company_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLocation = job.location?.toLowerCase().includes(locationTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || job.category === parseInt(selectedCategory);
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesLocation && matchesCategory;
   });
 
   const formatPostedDate = (dateString) => {
@@ -52,7 +62,7 @@ const AllJobs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 md:pt-32 pb-20 px-6">
+    <div className="min-h-screen bg-slate-50 pt-28 md:pt-32 pb-20 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -69,19 +79,32 @@ const AllJobs = () => {
           </p>
         </div>
 
-        {/* Search + Category Filter */}
+        {/* Search + Location + Category Filter */}
         <div className="bg-white p-5 md:p-6 rounded-[2rem] border border-slate-100 shadow-sm mb-8 flex flex-col md:flex-row gap-4">
-          <input
-            type="text"
-            placeholder="Search job title, company or location..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-5 py-3.5 text-sm font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500"
-          />
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" strokeWidth={2.5} />
+            <input
+              type="text"
+              placeholder="Search job title or company..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-5 py-3.5 text-sm font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div className="relative md:w-56">
+            <MapPin className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" strokeWidth={2.5} />
+            <input
+              type="text"
+              placeholder="Location"
+              value={locationTerm}
+              onChange={(e) => setLocationTerm(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-5 py-3.5 text-sm font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500"
+            />
+          </div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="md:w-64 bg-slate-50 border border-slate-200 rounded-xl px-5 py-3.5 text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 cursor-pointer"
+            className="md:w-56 bg-slate-50 border border-slate-200 rounded-xl px-5 py-3.5 text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 cursor-pointer"
           >
             <option value="All">All Categories</option>
             {categories.map((cat) => (

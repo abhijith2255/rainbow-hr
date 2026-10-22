@@ -39,4 +39,7 @@ urlpatterns = [
 
     # Employer ATS Pipeline (ഒരു ജോബിന്റെ Kanban)
     path('<int:pk>/pipeline/', views.job_pipeline_api, name='job-pipeline'),
+
+    # Platform Reviews / Testimonials (Homepage + /reviews page)
+    path('reviews/', views.review_list_create_api, name='review-list-create'),
 ]

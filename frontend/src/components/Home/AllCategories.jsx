@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Search, X, ArrowRight, SlidersHorizontal, LayoutGrid } from 'lucide-react';
+import { Search, X, ArrowRight, SlidersHorizontal, LayoutGrid, Briefcase } from 'lucide-react';
 import { CategoryIcon, getCategoryTheme } from './categoryVisuals';
 
 const AllCategories = () => {
@@ -196,7 +196,7 @@ const AllCategories = () => {
                 <Link
                   key={cat.id}
                   to={`/categories/${cat.id}/jobs`}
-                  className={`group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl p-7 transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] hover:bg-white/[0.07] hover:shadow-[0_30px_70px_-25px_rgba(0,0,0,0.85)] ${theme.ring}`}
+                  className={`group relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] backdrop-blur-xl p-7 shadow-md shadow-black/40 transition-all duration-300 hover:-translate-y-2 hover:scale-105 hover:bg-white/[0.07] hover:shadow-lg hover:shadow-black/60 ${theme.ring}`}
                 >
                   {/* Colored glow blob - hover-il soft aayi bright aakunnu */}
                   <div
@@ -215,23 +215,31 @@ const AllCategories = () => {
                       <CategoryIcon iconName={cat.icon} className="w-8 h-8 text-white" />
                     </div>
 
-                    <span
-                      className={`inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-black tracking-wide ${theme.chip}`}
-                    >
-                      {openings} {openings === 1 ? 'OPENING' : 'OPENINGS'}
-                    </span>
+                    {/* Corner arrow — hover-il maathram slide aayi kaanikkunnu */}
+                    <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 opacity-0 -translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0 group-hover:bg-white/10 group-hover:text-white">
+                      <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                    </div>
                   </div>
 
                   <h3
-                    className={`relative text-xl font-extrabold tracking-tight text-white mb-2 transition-colors duration-300 ${theme.accent}`}
+                    className={`relative text-xl font-extrabold tracking-tight text-white mb-3 transition-colors duration-300 ${theme.accent}`}
                   >
                     {cat.name}
                   </h3>
-                  <p className="relative text-sm font-medium text-slate-400 leading-relaxed">
+
+                  {/* Available Jobs count — name-inu thazhe clean modern badge */}
+                  <span
+                    className={`relative inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-black tracking-wide ${theme.chip}`}
+                  >
+                    <Briefcase className="w-3 h-3" strokeWidth={2.5} />
+                    {openings} {openings === 1 ? 'JOB' : 'JOBS'} AVAILABLE
+                  </span>
+
+                  <p className="relative mt-4 text-sm font-medium text-slate-400 leading-relaxed">
                     Verified roles from trusted employers in this sector.
                   </p>
 
-                  <div className="relative mt-7 flex items-center gap-2 text-sm font-bold text-slate-300">
+                  <div className="relative mt-6 flex items-center gap-2 text-sm font-bold text-slate-300">
                     Browse jobs
                     <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1.5" />
                   </div>

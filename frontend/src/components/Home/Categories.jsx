@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Briefcase } from 'lucide-react';
 import { CategoryIcon, getCategoryTheme } from './categoryVisuals';
+import Reveal from './Reveal';
+
+// Home page-il kaanikkunna curated sectors-nte ennam (clutter ozhivakkan 6 mattram)
+const MAX_SECTORS = 6;
 
 const Categories = () => {
   const [categories, setCategories] = useState([]);
@@ -23,90 +27,89 @@ const Categories = () => {
     }
   };
 
+  const sectors = categories.slice(0, MAX_SECTORS);
+
   return (
-    <section className="py-24 bg-slate-50 relative z-10">
-      <div className="container mx-auto px-6 max-w-7xl">
-        <div className="flex justify-between items-end mb-12">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
-              Popular <span className="text-emerald-500">Categories</span>
-            </h2>
-            <p className="text-slate-500 font-medium mt-3 text-lg">
-              Explore the most demanded job sectors in the market.
-            </p>
-          </div>
-          <Link
-            to="/categories"
-            className="hidden md:flex items-center gap-2 text-emerald-600 font-extrabold hover:text-emerald-700 transition-colors group"
-          >
-            Browse All
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
+    <section className="relative py-20 sm:py-24 bg-slate-50 overflow-hidden">
+      {/* Ambient glows — premium international portal feel */}
+      <div className="pointer-events-none absolute -top-24 left-[-10%] w-[32rem] h-[32rem] bg-emerald-200/25 rounded-full blur-[140px]"></div>
+      <div className="pointer-events-none absolute bottom-[-20%] right-[-10%] w-[28rem] h-[28rem] bg-teal-200/25 rounded-full blur-[140px]"></div>
+
+      <div className="relative container mx-auto px-5 sm:px-6 max-w-7xl z-10">
+
+        {/* Curated header — centered, roomy, uncluttered */}
+        <Reveal className="text-center max-w-2xl mx-auto mb-14">
+          <span className="inline-block px-4 py-1.5 bg-white text-emerald-600 border border-emerald-100 rounded-full font-black text-[11px] tracking-[0.2em] uppercase mb-4 shadow-sm">
+            Top Sectors
+          </span>
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
+            Explore by{' '}
+            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Industry</span>
+          </h2>
+          <p className="text-slate-500 font-medium mt-4 text-base sm:text-lg">
+            The most in-demand hiring sectors across Kerala, curated for verified roles only.
+          </p>
+        </Reveal>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="bg-white p-8 rounded-[2rem] border border-slate-100 animate-pulse">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 mb-6"></div>
-                <div className="h-5 w-2/3 rounded-full bg-slate-100 mb-3"></div>
-                <div className="h-3 w-1/3 rounded-full bg-slate-50"></div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: MAX_SECTORS }).map((_, index) => (
+              <div key={index} className="bg-white p-7 rounded-3xl border border-slate-100 animate-pulse h-[190px]"></div>
             ))}
           </div>
-        ) : categories.length === 0 ? (
-          <p className="text-slate-500 font-medium">No categories added yet.</p>
+        ) : sectors.length === 0 ? (
+          <p className="text-center text-slate-500 font-medium">No categories added yet.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.slice(0, 8).map((cat, index) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sectors.map((cat, index) => {
               const theme = getCategoryTheme(index);
               const openings = cat.jobs_count || 0;
 
               return (
-                <Link
-                  key={cat.id}
-                  to={`/categories/${cat.id}/jobs`}
-                  className={`group relative overflow-hidden bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.18)] ${theme.ring}`}
-                >
-                  {/* Category-inte color-il ulla soft glow - hover-il mattram kaanikkunnu */}
-                  <div
-                    className={`pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full bg-gradient-to-br ${theme.icon} opacity-0 blur-[55px] transition-opacity duration-500 group-hover:opacity-25`}
-                  ></div>
+                <Reveal key={cat.id} delay={index * 70} className="h-full">
+                  <Link
+                    to={`/categories/${cat.id}/jobs`}
+                    className={`group relative flex h-full flex-col overflow-hidden bg-white p-7 rounded-3xl border border-slate-100 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg hover:border-slate-200 will-change-transform ${theme.ring}`}
+                  >
+                    {/* Sector-inte color-il ulla soft glow — hover-il maathram varunnu */}
+                    <div className={`pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full bg-gradient-to-br ${theme.icon} opacity-0 blur-[60px] transition-opacity duration-500 group-hover:opacity-25`}></div>
 
-                  <div className="relative flex items-start justify-between gap-3 mb-6">
-                    <div
-                      className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${theme.icon} flex items-center justify-center shadow-lg ${theme.glow} transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6`}
-                    >
-                      <CategoryIcon iconName={cat.icon} className="w-8 h-8 text-white" />
+                    {/* Corner arrow badge */}
+                    <div className="absolute top-6 right-6 w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 transition-all duration-300 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 group-hover:rotate-45">
+                      <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
                     </div>
 
-                    <span className="rounded-full bg-slate-50 border border-slate-100 px-3 py-1.5 text-[11px] font-black tracking-wide uppercase text-slate-500">
-                      {openings} {openings === 1 ? 'Opening' : 'Openings'}
-                    </span>
-                  </div>
+                    {/* Icon tile */}
+                    <div className={`relative w-14 h-14 rounded-2xl bg-gradient-to-br ${theme.icon} flex items-center justify-center shadow-lg ${theme.glow} transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}>
+                      <CategoryIcon iconName={cat.icon} className="w-7 h-7 text-white" />
+                    </div>
 
-                  <h3 className="relative text-xl font-extrabold text-slate-900 mb-2 tracking-tight group-hover:text-emerald-600 transition-colors">
-                    {cat.name}
-                  </h3>
-                  <p className="relative text-slate-500 font-semibold text-sm">
-                    Verified roles in this sector
-                  </p>
-                </Link>
+                    {/* Name + Available Jobs badge */}
+                    <div className="relative flex flex-1 flex-col">
+                      <h3 className="mt-5 text-lg font-extrabold tracking-tight text-slate-900 transition-colors duration-300 group-hover:text-emerald-600">
+                        {cat.name}
+                      </h3>
+                      <span className="mt-3 inline-flex items-center gap-1.5 self-start rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-500 transition-colors duration-300 group-hover:border-emerald-100 group-hover:bg-emerald-50 group-hover:text-emerald-600">
+                        <Briefcase className="w-3 h-3" strokeWidth={2.5} />
+                        {openings} {openings === 1 ? 'Job' : 'Jobs'} Available
+                      </span>
+                    </div>
+                  </Link>
+                </Reveal>
               );
             })}
           </div>
         )}
 
-        {/* Mobile View All Button */}
-        <div className="mt-8 text-center md:hidden">
+        <Reveal className="mt-12 text-center">
           <Link
             to="/categories"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm"
+            className="group inline-flex items-center gap-2 px-7 py-4 bg-white border border-slate-200 text-slate-800 font-extrabold rounded-2xl text-sm shadow-sm hover:border-emerald-200 hover:text-emerald-600 hover:shadow-md transition-all"
           >
-            See All Categories
-            <ArrowRight className="w-4 h-4" />
+            Browse All Sectors
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />
           </Link>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

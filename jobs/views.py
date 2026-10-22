@@ -8,8 +8,8 @@ from datetime import timedelta
 
 from accounts.models import UserProfile
 from accounts.audit import log_action
-from .models import Job, Category, JobApplication, SavedJob, JobView
-from .serializers import JobSerializer, CategorySerializer, JobApplicationSerializer, SavedJobSerializer
+from .models import Job, Category, JobApplication, SavedJob, JobView, Review
+from .serializers import JobSerializer, CategorySerializer, JobApplicationSerializer, SavedJobSerializer, ReviewSerializer
 from .validators import validate_resume_file
 
 
@@ -700,3 +700,50 @@ def employer_pipeline_jobs_api(request):
             "applicants": approved_count,
         })
     return Response(data, status=status.HTTP_200_OK)
+
+
+# --- 16. PLATFORM REVIEWS / TESTIMONIALS ---
+# GET പബ്ലിക് (Homepage + /reviews പേജ്). POST-ന് ലോഗിൻ ചെയ്ത candidate / employer മാത്രം.
+@api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+def review_list_create_api(request):
+    if request.method == 'GET':
+        # Latest 60 reviews (select_related vazhi profile queries N+1 aakilla)
+        reviews = Review.objects.select_related(
+            'user__candidate_profile', 'user__employer_profile'
+        )[:60]
+        serializer = ReviewSerializer(reviews, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # ---- POST: പുതിയ റിവ്യൂ ----
+    if not request.user.is_authenticated:
+        return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    # Staff / Admin-ന് റിവ്യൂ എഴുതേണ്ട ആവശ്യമില്ല; candidate / employer മാത്രം.
+    if profile.role not in ['candidate', 'employer'] and not request.user.is_superuser:
+        return Response(
+            {"error": "Only candidates and employers can write a review"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    try:
+        rating = int(request.data.get('rating'))
+    except (TypeError, ValueError):
+        return Response({"error": "Rating must be a number between 1 and 5"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if rating < 1 or rating > 5:
+        return Response({"error": "Rating must be between 1 and 5"}, status=status.HTTP_400_BAD_REQUEST)
+
+    comment = (request.data.get('comment') or '').strip()
+    if not comment:
+        return Response({"error": "Please write a short review"}, status=status.HTTP_400_BAD_REQUEST)
+
+    review = Review.objects.create(
+        user=request.user,
+        role='employer' if profile.role == 'employer' else 'candidate',
+        rating=rating,
+        comment=comment,
+    )
+    serializer = ReviewSerializer(review, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_201_CREATED)

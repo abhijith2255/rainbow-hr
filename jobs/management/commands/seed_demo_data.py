@@ -12,6 +12,9 @@ Ithu cheyyunnathu:
      (approval_status='Approved', is_active=True) - ava homepage-ilum
      job listing pages-ilum nalla pole kaanikkum.
 
+    python manage.py seed_demo_data
+      -> Fresh categories, approved demo jobs, and Kerala-named demo reviews create cheyyunnu.
+
     python manage.py seed_demo_data --keep-users
       -> poster accounts create cheyyilla; DB-il already ulla employer/staff-ne use cheyyum.
 """
@@ -20,8 +23,8 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from accounts.models import EmployerProfile, UserProfile
-from jobs.models import Category, Job
+from accounts.models import CandidateProfile, EmployerProfile, UserProfile
+from jobs.models import Category, Job, Review
 
 User = get_user_model()
 
@@ -444,11 +447,148 @@ DEMO_JOBS = [
     },
 ]
 
+# Demo platform reviews - ella perum strictly Kerala names (candidate + employer mix).
+# Ivarude usernames-il 'demo_rev_' prefix ittathu kondu real accounts-umayittu
+# confusion undaavilla; seed veendum run cheyyumbol get_or_create vazhi duplicate aavilla.
+DEMO_REVIEWS = [
+    {
+        'username': 'demo_rev_akhil',
+        'name': 'Akhil Menon',
+        'role': 'candidate',
+        'designation': 'Backend Developer',
+        'location': 'Kochi',
+        'rating': 5,
+        'comment': (
+            'RainbowHR made my job hunt in Kochi so much easier. Within two weeks of '
+            'updating my profile I had three interview calls and landed a backend role. '
+            'The verified employer badges gave me real confidence.'
+        ),
+    },
+    {
+        'username': 'demo_rev_sruthi',
+        'name': 'Sruthi Nair',
+        'role': 'candidate',
+        'designation': 'UI/UX Designer',
+        'location': 'Thiruvananthapuram',
+        'rating': 5,
+        'comment': (
+            'Clean interface and absolutely no fake listings. I loved that every '
+            'application shows a clear status timeline, so I always knew exactly where '
+            'I stood. Highly recommended for freshers in Kerala.'
+        ),
+    },
+    {
+        'username': 'demo_rev_vishnu',
+        'name': 'Vishnu Prasad',
+        'role': 'candidate',
+        'designation': 'Data Analyst',
+        'location': 'Thrissur',
+        'rating': 4,
+        'comment': (
+            'Great platform with genuinely useful filters. Salary range and perks are '
+            'always mentioned upfront, which saves a lot of time. Would love a mobile '
+            'app in the future.'
+        ),
+    },
+    {
+        'username': 'demo_rev_fathima',
+        'name': 'Fathima Rahman',
+        'role': 'candidate',
+        'designation': 'Staff Nurse',
+        'location': 'Kozhikode',
+        'rating': 5,
+        'comment': (
+            'As a nurse looking for work in Kozhikode, this site connected me with a '
+            'hospital that actually matched my shift preferences. The verification '
+            'process made everything feel trustworthy.'
+        ),
+    },
+    {
+        'username': 'demo_rev_arjun',
+        'name': 'Arjun Krishnan',
+        'role': 'employer',
+        'company': 'Nexora Softwares',
+        'industry': 'IT & Software',
+        'location': 'Kochi',
+        'rating': 5,
+        'comment': (
+            'We hired two developers through RainbowHR this quarter. The candidate '
+            'quality in Kerala is excellent and the moderation team keeps listings '
+            'clean. Fast, professional and genuinely worth it.'
+        ),
+    },
+    {
+        'username': 'demo_rev_meenakshi',
+        'name': 'Meenakshi Warrier',
+        'role': 'employer',
+        'company': 'Calicut Retail Group',
+        'industry': 'Sales & Marketing',
+        'location': 'Kozhikode',
+        'rating': 4,
+        'comment': (
+            'Posting a job took less than five minutes and we started receiving relevant '
+            'applications the same day. The pipeline view makes shortlisting really simple.'
+        ),
+    },
+    {
+        'username': 'demo_rev_rahul',
+        'name': 'Rahul Varma',
+        'role': 'candidate',
+        'designation': 'Full Stack Developer',
+        'location': 'Kollam',
+        'rating': 5,
+        'comment': (
+            'The saved jobs and suggested roles features are brilliant. I applied to five '
+            'companies and got called for four interviews. Easily the best job portal '
+            'experience I have had so far.'
+        ),
+    },
+    {
+        'username': 'demo_rev_anjali',
+        'name': 'Anjali Thomas',
+        'role': 'employer',
+        'company': 'Vembanad Hospitality',
+        'industry': 'Hospitality & Hotel Management',
+        'location': 'Alappuzha',
+        'rating': 5,
+        'comment': (
+            'As an HR lead I really appreciate that every application arrives with a '
+            'verified resume. Screening is much faster and we waste far less time on '
+            'irrelevant profiles.'
+        ),
+    },
+    {
+        'username': 'demo_rev_riyas',
+        'name': 'Mohammed Riyas',
+        'role': 'candidate',
+        'designation': 'Accountant',
+        'location': 'Kannur',
+        'rating': 4,
+        'comment': (
+            'Very good experience overall. Employers reply quickly and the support team '
+            'actually responds to queries. Scheduling my interview was smooth.'
+        ),
+    },
+    {
+        'username': 'demo_rev_kavya',
+        'name': 'Kavya Suresh',
+        'role': 'candidate',
+        'designation': 'Content Writer',
+        'location': 'Palakkad',
+        'rating': 5,
+        'comment': (
+            'I found my first job through RainbowHR right after college. The profile '
+            'builder helped me present my skills properly and the application tracking '
+            'kept me calm throughout the process.'
+        ),
+    },
+]
+
 
 class Command(BaseCommand):
     help = (
-        'Delete all existing Jobs and Categories, then seed fresh multi-industry '
-        'demo categories and approved demo job posts.'
+        'Delete all existing Jobs, Categories and Reviews, then seed fresh multi-industry '
+        'demo categories, approved demo job posts and Kerala-named demo reviews.'
     )
 
     def add_arguments(self, parser):
@@ -463,12 +603,16 @@ class Command(BaseCommand):
         # ---------- 1. Existing data clear cheyyunnu ----------
         old_jobs = Job.objects.count()
         old_categories = Category.objects.count()
+        old_reviews = Review.objects.count()
         # Job delete cheyyumbol JobApplication / SavedJob / JobView (CASCADE) koode povum.
         Job.objects.all().delete()
         Category.objects.all().delete()
+        # Duplicate reviews varathirikkan pazhaya reviews ellam maatti kalayunnu.
+        Review.objects.all().delete()
         self.stdout.write(
             self.style.WARNING(
-                f'Cleared {old_jobs} job post(s) and {old_categories} category(ies).'
+                f'Cleared {old_jobs} job post(s), {old_categories} category(ies) '
+                f'and {old_reviews} review(s).'
             )
         )
 
@@ -506,7 +650,54 @@ class Command(BaseCommand):
         self.stdout.write(
             'Posters used: ' + ', '.join(user.username for user in posters)
         )
+
+        # ---------- 5. Demo reviews (strictly Kerala names) ----------
+        self._seed_reviews()
+
         self.stdout.write(self.style.SUCCESS('Demo data seeding complete.'))
+
+    # ------------------------------------------------------------------
+    def _seed_reviews(self):
+        """Kerala perulla demo users undakki avaril ninnu platform reviews create cheyyunnu."""
+        for spec in DEMO_REVIEWS:
+            user, created_user = User.objects.get_or_create(username=spec['username'])
+            if created_user:
+                user.set_password(DEMO_PASSWORD)
+                user.email = f"{spec['username']}@example.com"
+                user.save()
+
+            UserProfile.objects.get_or_create(user=user, defaults={'role': spec['role']})
+
+            if spec['role'] == 'employer':
+                EmployerProfile.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        'company_name': spec.get('company') or spec['name'],
+                        'hr_name': spec['name'],
+                        'industry': spec.get('industry'),
+                        'company_location': spec.get('location'),
+                    },
+                )
+            else:
+                CandidateProfile.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        'full_name': spec['name'],
+                        'designation': spec.get('designation'),
+                        'location': spec.get('location'),
+                    },
+                )
+
+            Review.objects.create(
+                user=user,
+                role=spec['role'],
+                rating=spec['rating'],
+                comment=spec['comment'],
+            )
+
+        self.stdout.write(
+            self.style.SUCCESS(f'Created {len(DEMO_REVIEWS)} demo reviews from Kerala users.')
+        )
 
     # ------------------------------------------------------------------
     def _get_posters(self, create):

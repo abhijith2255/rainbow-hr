@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Job, Category, JobApplication, SavedJob
+from .models import Job, Category, JobApplication, SavedJob, Review
 
 # 1. പുതിയ Category Serializer
 # 1.puthiya Category Serializer
@@ -154,3 +154,56 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             timeline.append({'stage': 'Rejected', 'state': 'current', 'date': obj.stage_updated_at})
 
         return timeline
+
+
+# Platform Review / Testimonial Serializer
+# Public aayi kaanikkunna fields mathram (user id leak cheyyilla).
+class ReviewSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+    designation = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Review
+        # user field output-il illa - POST-il request.user-il ninnu server-set cheyyunnu.
+        fields = ['id', 'role', 'rating', 'comment', 'created_at', 'display_name', 'designation', 'avatar']
+        read_only_fields = ['id', 'created_at']
+
+    def get_display_name(self, obj):
+        """Candidate -> full_name, Employer -> company_name, illenkil username."""
+        user = obj.user
+        if obj.role == 'employer':
+            profile = getattr(user, 'employer_profile', None)
+            if profile and profile.company_name:
+                return profile.company_name
+        else:
+            profile = getattr(user, 'candidate_profile', None)
+            if profile and profile.full_name:
+                return profile.full_name
+        return getattr(user, 'username', '') or 'RainbowHR User'
+
+    def get_designation(self, obj):
+        """Card-il kaanikkunna role description (e.g. 'Employer', 'Candidate')."""
+        if obj.role == 'employer':
+            profile = getattr(obj.user, 'employer_profile', None)
+            return (profile.industry if profile and profile.industry else None) or 'Employer'
+        profile = getattr(obj.user, 'candidate_profile', None)
+        return (profile.designation if profile and profile.designation else None) or 'Candidate'
+
+    def get_avatar(self, obj):
+        """Profile picture / company logo undenkil absolute URL, illenkil None (frontend initials kaanikkum)."""
+        if obj.role == 'employer':
+            profile = getattr(obj.user, 'employer_profile', None)
+            image = getattr(profile, 'company_logo', None)
+        else:
+            profile = getattr(obj.user, 'candidate_profile', None)
+            image = getattr(profile, 'profile_picture', None)
+
+        if not image:
+            return None
+        try:
+            url = image.url
+        except ValueError:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(url) if request else url

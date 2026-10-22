@@ -155,8 +155,8 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted, portalLabel = 'Employer Po
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-[2.5rem] w-full max-w-3xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-slate-100">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6">
+      <div className="bg-white rounded-[2.5rem] w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-100">
         
         <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
           <div>

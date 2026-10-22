@@ -101,7 +101,7 @@ const handleAuthSuccess = (token, role) => {
   const handlePhoneSubmit = (e) => { e.preventDefault(); alert('OTP sent!'); };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 font-premium" style={{ perspective: '1500px' }}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0 font-premium" style={{ perspective: '1500px' }}>
       
       {/* High-End Animations */}
       <style>{`
@@ -138,7 +138,7 @@ const handleAuthSuccess = (token, role) => {
       ></div>
 
       {/* 3D Flipped Modal Card */}
-      <div className={`relative z-10 w-full max-w-[420px] bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white/40 p-8 sm:p-10 ${isClosing ? 'animate-flip-out' : 'animate-flip-in'}`}>
+      <div className={`relative z-10 w-full max-w-[420px] max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] border border-white/40 p-8 sm:p-10 ${isClosing ? 'animate-flip-out' : 'animate-flip-in'}`}>
         
         {/* Floating Close Button */}
         <button onClick={onClose} className="absolute top-5 right-5 p-2.5 bg-slate-50/50 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-700 transition-all duration-300 z-20 shadow-sm border border-slate-200/50">

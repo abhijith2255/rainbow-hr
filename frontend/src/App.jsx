@@ -7,6 +7,7 @@ import AllCategories from './components/Home/AllCategories';
 import CategoryJobs from './components/Home/CategoryJobs';
 import AllJobs from './components/Home/AllJobs';
 import JobDetails from './components/Home/JobDetails';
+import AllReviews from './components/Home/AllReviews';
 import { AuthProvider } from './context/AuthContext';
 
 // --- Dashboard Imports ---
@@ -171,6 +172,8 @@ const AppRoutes = () => {
         {/* എല്ലാ ജോബുകളും + ഒരു ജോബിന്റെ വിശദാംശങ്ങൾ */}
         <Route path="/jobs" element={<AllJobs />} />
         <Route path="/jobs/:jobId" element={<JobDetails />} />
+        {/* എല്ലാ റിവ്യൂകളും കാണാനുള്ള പേജ് (homepage review section-ൽ നിന്ന് link) */}
+        <Route path="/reviews" element={<AllReviews />} />
       </Routes>
 
       {/* Navbar ഉള്ള എല്ലാ പേജുകളിലും Footer-ഉം സ്ഥിരമായി കാണിക്കുന്നു */}
@@ -198,8 +201,32 @@ function App() {
           @keyframes spin-slow { 100% { transform: rotate(360deg); } }
           @keyframes spin-fast { 100% { transform: rotate(-360deg); } }
 
+          /* Homepage preloader animations */
+          @keyframes logo-pop { 0% { transform: scale(0.82); opacity: 0; } 60% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+          @keyframes pulse-glow { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.75; transform: scale(1.15); } }
+          @keyframes load-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+          /* Trust marquee — company logos endless aayi scroll cheyyunnu */
+          @keyframes marquee-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+          /* Navbar mobile menu + profile dropdown-nte smooth entry animations */
+          @keyframes menu-drop { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes dropdown-pop { from { opacity: 0; transform: translateY(-8px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+          .animate-menu-drop { animation: menu-drop 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          .animate-dropdown-pop { animation: dropdown-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform-origin: top right; }
+
           .animate-spin-slow { animation: spin-slow 3s linear infinite; }
           .animate-spin-fast { animation: spin-fast 1.5s linear infinite; }
+          .animate-logo-pop { animation: logo-pop 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          .animate-pulse-glow { animation: pulse-glow 1.8s ease-in-out infinite; }
+          .animate-load-bar { animation: load-bar 1.05s cubic-bezier(0.65, 0, 0.35, 1) forwards; transform-origin: left; }
+          .animate-marquee { animation: marquee-scroll 38s linear infinite; }
+          .marquee-paused:hover .animate-marquee { animation-play-state: paused; }
+
+          /* Scroll-il kondu varumbol elements fade + slide aayi kaanikkunnu */
+          .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1); }
+          .reveal.is-visible { opacity: 1; transform: none; }
+
           .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
           .delay-100 { animation-delay: 100ms; }
           .delay-200 { animation-delay: 200ms; }
@@ -207,6 +234,14 @@ function App() {
           .animate-float-1 { animation: float-img-1 5s ease-in-out infinite; }
           .animate-float-2 { animation: float-img-2 4s ease-in-out infinite; animation-delay: 1s; }
           .animate-ripple { animation: ripple-effect 2s infinite; }
+
+          /* Accessibility: motion aavashyamillathavarkku animation venda */
+          @media (prefers-reduced-motion: reduce) {
+            .animate-marquee, .animate-logo-pop, .animate-pulse-glow, .animate-load-bar,
+            .animate-menu-drop, .animate-dropdown-pop,
+            .animate-float-1, .animate-float-2, .animate-spin-slow, .animate-spin-fast { animation: none !important; }
+            .reveal { opacity: 1; transform: none; transition: none; }
+          }
         `}</style>
 
         <AppRoutes />
