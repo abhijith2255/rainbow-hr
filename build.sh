@@ -7,6 +7,5 @@ pip install -r requirements.txt
 python manage.py collectstatic --no-input
 python manage.py migrate
 
-export DJANGO_SUPERUSER_PASSWORD=admin
-python manage.py createsuperuser --noinput --username admin --email admin@example.com || true
-python manage.py loaddata mydata.json || true
+python manage.py flush --no-input
+python manage.py loaddata alldata.json
