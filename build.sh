@@ -9,3 +9,4 @@ python manage.py migrate
 
 export DJANGO_SUPERUSER_PASSWORD=admin
 python manage.py createsuperuser --noinput --username admin --email admin@example.com || true
+python manage.py loaddata mydata.json || true
