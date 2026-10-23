@@ -16,12 +16,12 @@ const CategoryJobs = () => {
   const fetchJobsAndCategory = async () => {
     setLoading(true);
     try {
-      const catRes = await axios.get('http://127.0.0.1:8000/api/jobs/categories/');
+      const catRes = await axios.get('https://rainbow-hr.onrender.com/api/jobs/categories/');
       const currentCat = catRes.data.find(c => c.id === parseInt(categoryId));
       if (currentCat) setCategoryName(currentCat.name);
 
       const token = localStorage.getItem('authToken');
-      const jobsRes = await axios.get('http://127.0.0.1:8000/api/jobs/?public=true', {
+      const jobsRes = await axios.get('https://rainbow-hr.onrender.com/api/jobs/?public=true', {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const filtered = (Array.isArray(jobsRes.data) ? jobsRes.data : []).filter(

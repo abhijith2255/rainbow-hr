@@ -62,7 +62,7 @@ const handleAuthSuccess = (token, role) => {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/accounts/login/', { username, password });
+      const response = await axios.post('https://rainbow-hr.onrender.com/api/accounts/login/', { username, password });
       handleAuthSuccess(response.data.token, response.data.role);
     } catch (err) {
       setError(err.response?.data?.error || 'Authentication failed. Please try again.');
@@ -86,7 +86,7 @@ const handleAuthSuccess = (token, role) => {
         role: selectedRole,
         profile_data: selectedRole === 'candidate' ? candidateData : employerData
       };
-      const response = await axios.post('http://127.0.0.1:8000/api/accounts/set-role/', payload, { headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await axios.post('https://rainbow-hr.onrender.com/api/accounts/set-role/', payload, { headers: { 'Authorization': `Bearer ${token}` } });
       login(token, response.data.role);
       onClose();
       if (onLoginSuccess) onLoginSuccess(); // പേജ് റീഫ്രഷ് ചെയ്യാതെ അപ്ഡേറ്റ് ചെയ്യുന്നു

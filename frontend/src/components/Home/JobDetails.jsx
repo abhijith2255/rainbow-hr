@@ -37,7 +37,7 @@ const JobDetails = () => {
     if (!jobId) return;
     const trackView = async () => {
       try {
-        await axios.post(`http://127.0.0.1:8000/api/jobs/${jobId}/view/`);
+        await axios.post(`https://rainbow-hr.onrender.com/api/jobs/${jobId}/view/`);
       } catch (error) {
         // view ട്രാക്കിംഗ് പരാജയപ്പെട്ടാലും യൂസറെ ബാധിക്കരുത്
         console.error("Error tracking job view:", error);
@@ -54,12 +54,12 @@ const JobDetails = () => {
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
       // 1. ജോബ് ഡീറ്റെയിൽസ് (പബ്ലിക് എൻഡ്‌പോയിന്റ്)
-      const jobRes = await axios.get(`http://127.0.0.1:8000/api/jobs/${jobId}/`, { headers });
+      const jobRes = await axios.get(`https://rainbow-hr.onrender.com/api/jobs/${jobId}/`, { headers });
       const currentJob = jobRes.data;
       setJob(currentJob);
 
       // 2. സമാനമായ (suggested) ജോബുകൾ - ഒരേ കാറ്റഗറി / ജോബ് ടൈപ്പ് അനുസരിച്ച്
-      const allRes = await axios.get('http://127.0.0.1:8000/api/jobs/?public=true', { headers });
+      const allRes = await axios.get('https://rainbow-hr.onrender.com/api/jobs/?public=true', { headers });
       const allJobs = Array.isArray(allRes.data) ? allRes.data : [];
       const others = allJobs.filter((j) => j.id !== currentJob.id);
 
@@ -110,7 +110,7 @@ const JobDetails = () => {
     setSaveLoading(true);
     try {
       const res = await axios.post(
-        `http://127.0.0.1:8000/api/jobs/${jobId}/save/`,
+        `https://rainbow-hr.onrender.com/api/jobs/${jobId}/save/`,
         {},
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

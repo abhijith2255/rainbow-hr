@@ -16,7 +16,7 @@ const AllCategories = () => {
 
   const fetchAllCategories = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/categories/');
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/categories/');
       setCategories(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Error fetching categories:", error);

@@ -31,7 +31,7 @@ const AdminEmployers = () => {
     setError('');
     try {
       const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/admin/employers/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/accounts/admin/employers/', {
         headers: { 'Authorization': `Bearer ${token}` },
         params: search ? { search } : {},
       });
@@ -52,7 +52,7 @@ const AdminEmployers = () => {
     try {
       const token = localStorage.getItem('authToken');
       const res = await axios.post(
-        `http://127.0.0.1:8000/api/accounts/admin/employers/${employer.id}/verify/`,
+        `https://rainbow-hr.onrender.com/api/accounts/admin/employers/${employer.id}/verify/`,
         { verified: nextState },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

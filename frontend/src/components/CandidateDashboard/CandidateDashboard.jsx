@@ -29,13 +29,13 @@ const CandidateDashboard = () => {
       if (!token) return handleLogout();
 
       const [dashRes, appsRes, savedRes] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/accounts/candidate/dashboard-data/', {
+        axios.get('https://rainbow-hr.onrender.com/api/accounts/candidate/dashboard-data/', {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        axios.get('http://127.0.0.1:8000/api/jobs/my-applications/', {
+        axios.get('https://rainbow-hr.onrender.com/api/jobs/my-applications/', {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        axios.get('http://127.0.0.1:8000/api/jobs/saved-jobs/', {
+        axios.get('https://rainbow-hr.onrender.com/api/jobs/saved-jobs/', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -63,7 +63,7 @@ const CandidateDashboard = () => {
     if (!window.confirm("Are you sure you want to withdraw this application?")) return;
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete(`http://127.0.0.1:8000/api/jobs/applications/${appId}/`, {
+      await axios.delete(`https://rainbow-hr.onrender.com/api/jobs/applications/${appId}/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       alert("Application withdrawn successfully!");
@@ -100,7 +100,7 @@ const CandidateDashboard = () => {
         formData.append('resume', editFormData.resume);
       }
 
-      const res = await axios.put(`http://127.0.0.1:8000/api/jobs/applications/${editingApp.id}/`, formData, {
+      const res = await axios.put(`https://rainbow-hr.onrender.com/api/jobs/applications/${editingApp.id}/`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -129,7 +129,7 @@ const CandidateDashboard = () => {
     if (!data?.profilePicture) return null;
     return data.profilePicture.startsWith('http') 
       ? data.profilePicture 
-      : `http://127.0.0.1:8000${data.profilePicture}`;
+      : `https://rainbow-hr.onrender.com${data.profilePicture}`;
   };
 
   return (
@@ -313,7 +313,7 @@ const CandidateDashboard = () => {
                 {viewingApp.resume && (
                   <div className="mt-3 pt-3 border-t border-slate-200">
                     <a 
-                      href={viewingApp.resume.startsWith('http') ? viewingApp.resume : `http://127.0.0.1:8000${viewingApp.resume}`} 
+                      href={viewingApp.resume.startsWith('http') ? viewingApp.resume : `https://rainbow-hr.onrender.com${viewingApp.resume}`} 
                       target="_blank" 
                       rel="noreferrer" 
                       className="inline-flex items-center gap-2 text-emerald-600 font-black text-xs hover:underline"

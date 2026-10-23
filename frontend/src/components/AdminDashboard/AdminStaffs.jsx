@@ -22,7 +22,7 @@ const AdminStaffs = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/admin/staff-list/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/accounts/admin/staff-list/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setStaffList(res.data);
@@ -42,7 +42,7 @@ const AdminStaffs = () => {
     setIsSaving(true);
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post('http://127.0.0.1:8000/api/accounts/admin/create-staff/', newStaff, {
+      await axios.post('https://rainbow-hr.onrender.com/api/accounts/admin/create-staff/', newStaff, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       alert("New Staff Account Created Successfully!");

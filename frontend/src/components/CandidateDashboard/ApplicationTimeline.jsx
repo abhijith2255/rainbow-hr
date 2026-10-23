@@ -21,7 +21,7 @@ const ApplicationTimeline = () => {
     setError('');
     try {
       const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/my-applications/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/my-applications/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setApplications(Array.isArray(res.data) ? res.data : (res.data?.results || []));

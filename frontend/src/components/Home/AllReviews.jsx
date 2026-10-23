@@ -7,7 +7,7 @@ import WriteReviewModal from './WriteReviewModal';
 import Login from '../../pages/login';
 import { useAuth } from '../../context/AuthContext';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = 'https://rainbow-hr.onrender.com';
 
 const AllReviews = () => {
   const { isLoggedIn, userRole } = useAuth();

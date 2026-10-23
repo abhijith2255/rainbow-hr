@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Star, X, Loader2, Send, CheckCircle2 } from 'lucide-react';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = 'https://rainbow-hr.onrender.com';
 
 const RATING_LABELS = {
   1: 'Poor',

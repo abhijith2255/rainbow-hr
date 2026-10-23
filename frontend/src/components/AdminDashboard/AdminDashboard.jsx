@@ -25,7 +25,7 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('authToken');
       const config = { headers: { 'Authorization': `Bearer ${token}` } };
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/admin/dashboard-data/', config);
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/accounts/admin/dashboard-data/', config);
       setDashboardData(res.data);
     } catch (err) {
       if (err.response?.status === 401) handleLogout();

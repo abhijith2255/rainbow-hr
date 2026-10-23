@@ -7,7 +7,7 @@ import WriteReviewModal from './WriteReviewModal';
 import Login from '../../pages/login';
 import { useAuth } from '../../context/AuthContext';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = 'https://rainbow-hr.onrender.com';
 
 // Homepage-il kaanikkunna reviews-nte ennam (clutter ozhivakkan 3 mattram)
 const MAX_FEATURED_REVIEWS = 3;

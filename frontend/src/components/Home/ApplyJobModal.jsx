@@ -22,7 +22,7 @@ const ApplyJobModal = ({ isOpen, onClose, job, onApplied }) => {
       const token = localStorage.getItem('authToken');
       if (!token) return;
 
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/accounts/profile/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -54,7 +54,7 @@ const ApplyJobModal = ({ isOpen, onClose, job, onApplied }) => {
 
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post(`http://127.0.0.1:8000/api/jobs/${job.id}/apply/`, formData, {
+      await axios.post(`https://rainbow-hr.onrender.com/api/jobs/${job.id}/apply/`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',

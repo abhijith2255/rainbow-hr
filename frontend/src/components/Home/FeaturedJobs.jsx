@@ -25,7 +25,7 @@ const FeaturedJobs = () => {
     try {
       // ലോഗിൻ ചെയ്ത കാൻഡിഡേറ്റിന് "ഇതിനകം അപ്ലൈ ചെയ്തോ" എന്ന് അറിയാൻ ടോക്കൺ അയയ്ക്കുന്നു
       const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/?public=true', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/?public=true', {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       setJobs(Array.isArray(res.data) ? res.data : []);

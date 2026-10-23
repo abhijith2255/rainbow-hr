@@ -37,7 +37,7 @@ const StaffDashboard = () => {
   const fetchStaffData = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await axios.get('http://127.0.0.1:8000/api/accounts/staff/dashboard-data/', {
+      const response = await axios.get('https://rainbow-hr.onrender.com/api/accounts/staff/dashboard-data/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setDashboardData(response.data);

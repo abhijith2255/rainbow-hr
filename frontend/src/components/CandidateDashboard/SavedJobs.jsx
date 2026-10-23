@@ -18,7 +18,7 @@ const SavedJobs = () => {
     setError('');
     try {
       const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/saved-jobs/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/saved-jobs/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setSavedJobs(Array.isArray(res.data) ? res.data : (res.data?.results || []));
@@ -35,7 +35,7 @@ const SavedJobs = () => {
     if (!window.confirm('Remove this job from your saved list?')) return;
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post(`http://127.0.0.1:8000/api/jobs/${jobId}/save/`, {}, {
+      await axios.post(`https://rainbow-hr.onrender.com/api/jobs/${jobId}/save/`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setSavedJobs((prev) => prev.filter((item) => item.job_details?.id !== jobId && item.job !== jobId));

@@ -31,7 +31,7 @@ const ManageCategories = ({ embedded = false }) => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/categories/');
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/categories/');
       setCategories(res.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -47,7 +47,7 @@ const ManageCategories = ({ embedded = false }) => {
     setIsSaving(true);
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post('http://127.0.0.1:8000/api/jobs/categories/', 
+      await axios.post('https://rainbow-hr.onrender.com/api/jobs/categories/', 
         { name, icon },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -65,7 +65,7 @@ const ManageCategories = ({ embedded = false }) => {
     if(!window.confirm("Are you sure you want to delete this category?")) return;
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete(`http://127.0.0.1:8000/api/jobs/categories/${id}/`, {
+      await axios.delete(`https://rainbow-hr.onrender.com/api/jobs/categories/${id}/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       fetchCategories();
@@ -84,7 +84,7 @@ const ManageCategories = ({ embedded = false }) => {
     if (!editName.trim()) return alert("Category Name is required!");
     try {
       const token = localStorage.getItem('authToken');
-      await axios.put(`http://127.0.0.1:8000/api/jobs/categories/${editCategory.id}/`, 
+      await axios.put(`https://rainbow-hr.onrender.com/api/jobs/categories/${editCategory.id}/`, 
         { name: editName, icon: editIcon },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

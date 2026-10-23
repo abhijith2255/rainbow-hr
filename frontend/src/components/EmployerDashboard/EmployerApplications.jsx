@@ -20,8 +20,8 @@ const EmployerApplications = () => {
       const token = localStorage.getItem('authToken');
       // jobId ഉണ്ടെങ്കിൽ ആ ജോബിന്റെ അപേക്ഷകൾ മാത്രം ബാക്കെൻഡിൽ നിന്ന് എടുക്കുന്നു
       const url = jobId
-        ? `http://127.0.0.1:8000/api/jobs/employer/applications/?job=${jobId}`
-        : 'http://127.0.0.1:8000/api/jobs/employer/applications/';
+        ? `https://rainbow-hr.onrender.com/api/jobs/employer/applications/?job=${jobId}`
+        : 'https://rainbow-hr.onrender.com/api/jobs/employer/applications/';
       const res = await axios.get(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -139,7 +139,7 @@ const EmployerApplications = () => {
                 
                 {app.resume && (
                   <a 
-                    href={app.resume.startsWith('http') ? app.resume : `http://127.0.0.1:8000${app.resume}`} 
+                    href={app.resume.startsWith('http') ? app.resume : `https://rainbow-hr.onrender.com${app.resume}`} 
                     target="_blank" 
                     rel="noreferrer" 
                     download
@@ -197,7 +197,7 @@ const EmployerApplications = () => {
               </button>
               {selectedApp.resume && (
                 <a 
-                  href={selectedApp.resume.startsWith('http') ? selectedApp.resume : `http://127.0.0.1:8000${selectedApp.resume}`} 
+                  href={selectedApp.resume.startsWith('http') ? selectedApp.resume : `https://rainbow-hr.onrender.com${selectedApp.resume}`} 
                   target="_blank" 
                   rel="noreferrer" 
                   className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-500/20"

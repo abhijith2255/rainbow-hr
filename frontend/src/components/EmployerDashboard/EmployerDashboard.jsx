@@ -25,19 +25,19 @@ const EmployerDashboard = () => {
       if (!token) return handleLogout();
 
       // 1. Employer Profile Data
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/employer/dashboard-data/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/accounts/employer/dashboard-data/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setData(res.data);
       
       // 2. ഈ Employer പോസ്റ്റ് ചെയ്ത സ്വന്തം Jobs മാത്രം ഫെച്ച് ചെയ്യുന്നു (?my_jobs=true)
-      const jobsRes = await axios.get('http://127.0.0.1:8000/api/jobs/?my_jobs=true', {
+      const jobsRes = await axios.get('https://rainbow-hr.onrender.com/api/jobs/?my_jobs=true', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setMyJobs(Array.isArray(jobsRes.data) ? jobsRes.data : (jobsRes.data?.results || []));
 
       // 3. Staff verify cheytha Approved Candidate Applications
-      const appsRes = await axios.get('http://127.0.0.1:8000/api/jobs/employer/applications/', {
+      const appsRes = await axios.get('https://rainbow-hr.onrender.com/api/jobs/employer/applications/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setApplications(Array.isArray(appsRes.data) ? appsRes.data : []);
@@ -61,7 +61,7 @@ const EmployerDashboard = () => {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) return;
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/employer/analytics/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/employer/analytics/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setTotalViews(res.data?.totals?.total_views ?? 0);
@@ -90,12 +90,12 @@ const EmployerDashboard = () => {
   const getLogoUrl = () => {
     const logo = data?.companyLogo || data?.company_logo;
     if (!logo) return null;
-    return logo.startsWith('http') ? logo : `http://127.0.0.1:8000${logo}`;
+    return logo.startsWith('http') ? logo : `https://rainbow-hr.onrender.com${logo}`;
   };
 
   const getResumeUrl = (path) => {
     if (!path) return null;
-    return path.startsWith('http') ? path : `http://127.0.0.1:8000${path}`;
+    return path.startsWith('http') ? path : `https://rainbow-hr.onrender.com${path}`;
   };
 
   // യഥാർത്ഥത്തിൽ അപ്രൂവ് ആയ ആക്ടീവ് ജോബുകളുടെ എണ്ണം മാത്രം ഫിൽട്ടർ ചെയ്യുന്നു

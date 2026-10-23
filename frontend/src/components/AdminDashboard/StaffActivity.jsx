@@ -78,7 +78,7 @@ const StaffActivity = () => {
       if (actionFilter) params.action = actionFilter;
       if (search) params.search = search;
 
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/staff-activity/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/accounts/staff-activity/', {
         headers: { 'Authorization': `Bearer ${token}` },
         params,
       });

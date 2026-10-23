@@ -32,8 +32,8 @@ const AllJobs = () => {
       const token = localStorage.getItem('authToken');
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       const [jobsRes, catRes] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/jobs/?public=true', { headers }),
-        axios.get('http://127.0.0.1:8000/api/jobs/categories/'),
+        axios.get('https://rainbow-hr.onrender.com/api/jobs/?public=true', { headers }),
+        axios.get('https://rainbow-hr.onrender.com/api/jobs/categories/'),
       ]);
       setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
       setCategories(Array.isArray(catRes.data) ? catRes.data : []);

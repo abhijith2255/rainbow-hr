@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE = 'http://127.0.0.1:8000';
+const API_BASE = 'https://rainbow-hr.onrender.com';
 
 const JobAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);

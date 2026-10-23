@@ -123,7 +123,7 @@ const ModerationAuditLog = () => {
       if (search) params.search = search;
       if (mineOnly && isStaff) params.mine = 'true';
 
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/moderation/audit-logs/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/accounts/moderation/audit-logs/', {
         headers: { 'Authorization': `Bearer ${token}` },
         params,
       });

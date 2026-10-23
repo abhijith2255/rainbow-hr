@@ -75,7 +75,7 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted, portalLabel = 'Employer Po
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/categories/');
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/categories/');
       setCategories(res.data);
       // മുൻപേ ഒരു കാറ്റഗറി സെലക്ട് ചെയ്തിട്ടില്ലെങ്കിൽ മാത്രം ആദ്യത്തേത് ഡിഫോൾട്ടായി വെക്കുന്നു
       if (res.data.length > 0) {
@@ -133,8 +133,8 @@ const PostJobModal = ({ isOpen, onClose, onJobPosted, portalLabel = 'Employer Po
       await axios({
         method: isEditMode ? 'put' : 'post',
         url: isEditMode
-          ? `http://127.0.0.1:8000/api/jobs/${jobToEdit.id}/`
-          : 'http://127.0.0.1:8000/api/jobs/',
+          ? `https://rainbow-hr.onrender.com/api/jobs/${jobToEdit.id}/`
+          : 'https://rainbow-hr.onrender.com/api/jobs/',
         data: payload,
         headers: { 'Authorization': `Bearer ${token}` }
       });

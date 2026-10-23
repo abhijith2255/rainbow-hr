@@ -17,8 +17,8 @@ const StaffApplicationApprovals = () => {
     try {
       const token = localStorage.getItem('authToken');
       const url = filter === 'All' 
-        ? 'http://127.0.0.1:8000/api/jobs/staff/applications/'
-        : `http://127.0.0.1:8000/api/jobs/staff/applications/?status=${filter}`;
+        ? 'https://rainbow-hr.onrender.com/api/jobs/staff/applications/'
+        : `https://rainbow-hr.onrender.com/api/jobs/staff/applications/?status=${filter}`;
 
       const res = await axios.get(url, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -42,7 +42,7 @@ const StaffApplicationApprovals = () => {
     try {
       const token = localStorage.getItem('authToken');
       await axios.post(
-        `http://127.0.0.1:8000/api/jobs/staff/applications/${appId}/verify/`,
+        `https://rainbow-hr.onrender.com/api/jobs/staff/applications/${appId}/verify/`,
         { action },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -60,7 +60,7 @@ const StaffApplicationApprovals = () => {
 
   const getResumeUrl = (path) => {
     if (!path) return null;
-    return path.startsWith('http') ? path : `http://127.0.0.1:8000${path}`;
+    return path.startsWith('http') ? path : `https://rainbow-hr.onrender.com${path}`;
   };
 
   return (

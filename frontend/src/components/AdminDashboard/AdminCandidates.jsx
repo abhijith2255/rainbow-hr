@@ -38,7 +38,7 @@ const AdminCandidates = () => {
     setError('');
     try {
       const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/admin/candidates/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/accounts/admin/candidates/', {
         headers: { 'Authorization': `Bearer ${token}` },
         params: search ? { search } : {},
       });

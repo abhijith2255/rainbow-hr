@@ -18,7 +18,7 @@ const StaffJobApprovals = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = Array.isArray(res.data) ? res.data : (res.data?.results || []);
@@ -81,7 +81,7 @@ const StaffJobApprovals = () => {
         description: editData.description,
         requirements: editData.requirements
       };
-      await axios.put(`http://127.0.0.1:8000/api/jobs/${selectedJob.id}/`, payload, {
+      await axios.put(`https://rainbow-hr.onrender.com/api/jobs/${selectedJob.id}/`, payload, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       alert("Job details updated successfully!");
@@ -98,7 +98,7 @@ const StaffJobApprovals = () => {
     if (!window.confirm("Are you sure you want to approve and publish this job?")) return;
     try {
       const token = localStorage.getItem('authToken');
-      await axios.post(`http://127.0.0.1:8000/api/jobs/${jobId}/approve/`, {}, {
+      await axios.post(`https://rainbow-hr.onrender.com/api/jobs/${jobId}/approve/`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       alert("Job Approved & Published!");
@@ -118,7 +118,7 @@ const StaffJobApprovals = () => {
     try {
       const token = localStorage.getItem('authToken');
       const res = await axios.post(
-        `http://127.0.0.1:8000/api/jobs/${job.id}/toggle-active/`,
+        `https://rainbow-hr.onrender.com/api/jobs/${job.id}/toggle-active/`,
         {},
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -138,7 +138,7 @@ const StaffJobApprovals = () => {
     setProcessingId(job.id);
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete(`http://127.0.0.1:8000/api/jobs/${job.id}/`, {
+      await axios.delete(`https://rainbow-hr.onrender.com/api/jobs/${job.id}/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       alert('Job deleted successfully.');

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-const API_ROOT = 'http://127.0.0.1:8000';
+const API_ROOT = 'https://rainbow-hr.onrender.com';
 
 // Backend-il ninnum varunna relative media URL-ne full URL aakki maattunnu
 const toAbsoluteUrl = (url) => {

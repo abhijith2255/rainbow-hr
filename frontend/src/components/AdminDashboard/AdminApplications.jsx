@@ -52,7 +52,7 @@ const AdminApplications = () => {
       if (statusFilter !== 'All') params.status = statusFilter;
       if (search) params.search = search;
 
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/staff/applications/', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/staff/applications/', {
         headers: { 'Authorization': `Bearer ${token}` },
         params,
       });
@@ -73,7 +73,7 @@ const AdminApplications = () => {
     try {
       const token = localStorage.getItem('authToken');
       await axios.post(
-        `http://127.0.0.1:8000/api/jobs/staff/applications/${application.id}/verify/`,
+        `https://rainbow-hr.onrender.com/api/jobs/staff/applications/${application.id}/verify/`,
         { action },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );

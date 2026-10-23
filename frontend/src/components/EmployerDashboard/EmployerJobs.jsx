@@ -17,7 +17,7 @@ const EmployerJobs = () => {
     try {
       const token = localStorage.getItem('authToken');
       if (!token) return navigate('/');
-      const res = await axios.get('http://127.0.0.1:8000/api/jobs/?my_jobs=true', {
+      const res = await axios.get('https://rainbow-hr.onrender.com/api/jobs/?my_jobs=true', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setJobs(Array.isArray(res.data) ? res.data : (res.data?.results || []));
@@ -54,7 +54,7 @@ const EmployerJobs = () => {
     try {
       const token = localStorage.getItem('authToken');
       const res = await axios.post(
-        `http://127.0.0.1:8000/api/jobs/${job.id}/toggle-active/`,
+        `https://rainbow-hr.onrender.com/api/jobs/${job.id}/toggle-active/`,
         {},
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -74,7 +74,7 @@ const EmployerJobs = () => {
     setProcessingId(job.id);
     try {
       const token = localStorage.getItem('authToken');
-      await axios.delete(`http://127.0.0.1:8000/api/jobs/${job.id}/`, {
+      await axios.delete(`https://rainbow-hr.onrender.com/api/jobs/${job.id}/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       alert('Job deleted successfully.');

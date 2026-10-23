@@ -6,7 +6,7 @@ const ResumePreview = ({ resumeUrl, title = 'Resume', compact = false }) => {
   // ബാക്കെൻഡിൽ നിന്നും വരുന്ന relative url-ന് ബേസ് url ചേർക്കുന്നു
   const normalizeUrl = (url) => {
     if (!url) return null;
-    return url.startsWith('http') ? url : `http://127.0.0.1:8000${url}`;
+    return url.startsWith('http') ? url : `https://rainbow-hr.onrender.com${url}`;
   };
 
   const url = normalizeUrl(resumeUrl);
