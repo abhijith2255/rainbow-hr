@@ -143,7 +143,7 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "https://rainbow-hr-git-main-abhijith2255s-projects.vercel.app",
+    "https://rainbow-hr-pearl.vercel.app",
     "http://localhost:5173",
 ]
 # JWT Token Settings (ടോക്കൺ കാലാവധി)
@@ -152,3 +152,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://rainbow-hr-pearl.vercel.app",  # ഇവിടെയും ചേർക്കാൻ മറക്കരുത്
+]
