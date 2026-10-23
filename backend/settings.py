@@ -1,5 +1,6 @@
 
 
+import os
 from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
@@ -112,6 +113,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # നിങ്ങളുടെ പഴയ പ്രൊജക്റ്റിൽ ഉള്ള whitenoise സെറ്റിങ്സ് ഒക്കെ ഇവിടെ ഉണ്ടാകും
 
 # --- Media Files (User Uploads) Settings ---
