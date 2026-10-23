@@ -3,7 +3,7 @@
 from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
-
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,7 +19,7 @@ SECRET_KEY = config('SECRET_KEY')
 # ഡിഫോൾട്ട് False ആണ് - .env-ൽ DEBUG=True എന്ന് നൽകിയാൽ മാത്രം ഡെവലപ്പ്മെന്റിൽ ഓൺ ആകും
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -74,10 +74,10 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3',
+        conn_max_age=600
+    )
 }
 
 
@@ -139,12 +139,10 @@ REST_FRAMEWORK = {
     ),
 }
 
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:5173',
-    cast=Csv()
-)
-
+CORS_ALLOWED_ORIGINS = [
+    "https://rainbow-hr-git-main-abhijith2255s-projects.vercel.app",
+    "http://localhost:5173",
+]
 # JWT Token Settings (ടോക്കൺ കാലാവധി)
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1), # ഒരു ദിവസത്തേക്ക് ലോഗിൻ നിൽക്കും
